@@ -9,6 +9,8 @@ db.user = require("./user.model");
 db.role = require("./role.model");
 db.user_detail = require("./user_detail.model");
 
+db.company = require("./company.model");
+
 db.ROLES = ["tg-admin", "admin", "freight-forwarder", "driver"];
 
 module.exports = db;
