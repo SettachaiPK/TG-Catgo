@@ -1,6 +1,8 @@
 const { authJwt } = require("../middlewares");
 const controller = require("../controllers/user.controller");
 
+var router = require("express").Router();
+
 module.exports = function(app) {
   app.use(function(req, res, next) {
     res.header(
@@ -10,7 +12,7 @@ module.exports = function(app) {
     next();
   });
 
-  app.get("/api/test/all", controller.allAccess);
+  app.get("/all", controller.allAccess);
 
   app.get("/api/test/user", [authJwt.verifyToken], controller.userBoard);
 
@@ -25,4 +27,6 @@ module.exports = function(app) {
     [authJwt.verifyToken, authJwt.isAdmin],
     controller.adminBoard
   );
+  
+  app.use('api/test', router);
 };
