@@ -9,5 +9,7 @@ module.exports = function(app) {
     next();
   });*/
 
-  app.get("/api/test/company/all", controller.allCompany);
+  app.get("/api/test/company", controller.allCompany);
+
+  app.post("/api/test/company", controller.createCompany);
 };
