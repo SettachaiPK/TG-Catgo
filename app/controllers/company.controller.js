@@ -1,6 +1,13 @@
 const db = require("../models");
 const Company = db.company;
 const CompanyDetail = db.company_detail;
+const updateableDetail = [
+    "company_name",
+    "user_id",
+    "address",
+    "company_province",
+    "company_postal"
+]
 
 exports.allCompany = (req, res) => {
     CompanyDetail.find({}).exec((err, company) => {
@@ -16,6 +23,38 @@ exports.allCompany = (req, res) => {
                 data: company
             });
         });
+};
+
+exports.getCompany = (req, res) => {
+    console.log(req.params);
+    CompanyDetail.find({
+        tax_id: {$in: req.params.taxid}
+    }).exec((err, company) => {
+        console.log(company)
+        if (company.length == 0) {
+            return res.status(404).send({ message: "Company Not found." });
+        }
+        return res.status(200).send({
+            message: "Company found.",
+            data: company
+        });
+    });
+};
+
+exports.getUserCompany = (req, res) => {
+    console.log(req.params);
+    CompanyDetail.find({
+        tax_id: {$in: req.params.taxid}
+    }).exec((err, company) => {
+        console.log(company)
+        if (company.length == 0) {
+            return res.status(404).send({ message: "Company Not found." });
+        }
+        return res.status(200).send({
+            message: "Company found.",
+            data: company
+        });
+    });
 };
 
 exports.createCompany = (req, res) => {
@@ -63,4 +102,21 @@ exports.createCompany = (req, res) => {
         })
 }
 
-  
+exports.updateCompany = (req, res) => {
+    console.log(req.query);
+    for (const key in req.query){
+        if(!updateableDetail.includes(key)){
+            delete req.query[key]
+          }
+    }
+    const data = {
+        $set: req.query
+      }
+    const id = {'tax_id': req.params.taxid};
+    console.log(id);
+    console.log(data);
+    CompanyDetail.findOneAndUpdate(id, data, function(err) {
+        if (err) return res.send(500, {error: err});
+        return res.status(201).send('Company Updated.');
+    });
+};
