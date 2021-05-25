@@ -1,25 +1,19 @@
 const mongoose = require("mongoose");
 
-const user_detail = mongoose.model(
-    "user_detail",
+const User_detail = mongoose.model(
+    "User_detail",
     new mongoose.Schema({
-        username: String,
-
-        password: String,
-        roles: [
+        username: [
             {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Role"
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
             }
         ],
-        address: String,
-        province: String,
-        postal: String,
+        prefix: String,
+        firstname: String,
+        lastname: String,
         phone: String,
-        email: String,
-        role: String,
-
-    })
+    }, { timestamps: true })
 );
 
-module.exports = user_detail;
+module.exports = User_detail;

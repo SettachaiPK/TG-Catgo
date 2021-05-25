@@ -1,11 +1,9 @@
 const db = require("../models");
 const ROLES = db.ROLES;
 const User = db.user;
-const User_detail = db.user_detail;
 
 checkDuplicateUsernameOrEmail = (req, res, next) => {
   // Username
-  console.log(req.body.username);
   User.findOne({
     username: req.body.username
   }).exec((err, user) => {
@@ -20,7 +18,7 @@ checkDuplicateUsernameOrEmail = (req, res, next) => {
     }
 
     // Email
-    User_detail.findOne({
+    User.findOne({
       email: req.body.email
     }).exec((err, user) => {
       if (err) {
@@ -32,7 +30,6 @@ checkDuplicateUsernameOrEmail = (req, res, next) => {
         res.status(400).send({ message: "Failed! Email is already in use!" });
         return;
       }
-
       next();
     });
   });
@@ -55,7 +52,6 @@ checkRolesExisted = (req, res, next) => {
 
 const verifySignUp = {
   checkDuplicateUsernameOrEmail,
-  checkRolesExisted
 };
 
 module.exports = verifySignUp;

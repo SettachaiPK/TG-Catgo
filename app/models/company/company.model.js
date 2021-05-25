@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const company = mongoose.model(
+const Company = mongoose.model(
     "company",
     new mongoose.Schema({
         company_name: String,
@@ -8,4 +8,4 @@ const company = mongoose.model(
     })
 );
 
-module.exports = company;
+module.exports = Company;

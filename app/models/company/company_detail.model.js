@@ -1,15 +1,19 @@
 const mongoose = require("mongoose");
 
-const company_detail = mongoose.model(
-    "company_detail",
+const Company_detail = mongoose.model(
+    "Company_detail",
     new mongoose.Schema({
         company_name: String,
-        user_id: String,
         address: String,
-        tax_id: String,
+        tax_id: [
+                {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "Company"
+                }
+        ],
         company_province: String,
         company_postal: String
     })
 );
 
-module.exports = company_detail;
+module.exports = Company_detail;

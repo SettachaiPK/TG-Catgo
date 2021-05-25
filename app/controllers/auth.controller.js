@@ -9,20 +9,27 @@ const Role = db.role;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
-exports.checktaxid = (req, res) => {
-    console.log(req.query.taxid);
-    if (req.query.taxid) {
-        Company_detail.find(
+    exports.checktaxid = (req, res) => {
+    if (req.body.taxid) {
+        Company.find(
             {
-                tax_id: {$in: req.query.taxid}
+                tax_id: {$in: req.body.taxid}
             },
             (err, taxid) => {
-
-            console.log(typeof(taxid));
+                console.log(taxid);
                 if (taxid.length == 0) {
-                    const company_detail = new Company_detail({
-                        tax_id: req.query.taxid,
+                    const company = new Company({
+                        tax_id: req.body.taxid,
+                        company_name: req.body.name
                     });
+                    company.save();
+                    const company_detail = new Company_detail({
+                        company_name: req.body.name,
+                        company_province: req.body.province,
+                        company_postal: req.body.postal,
+                        address: req.body.address,
+                    });
+                    company_detail.tax_id.push(company._id);
                     company_detail.save();
                     res.send({company_filter: true});
                     //return;
@@ -35,35 +42,41 @@ exports.checktaxid = (req, res) => {
 };
 
 exports.signup = (req, res) => {
-    console.log(req.body.username);
     const user = new User({
         username: req.body.username,
-        password: bcrypt.hashSync(req.body.password, 8)
+        password: bcrypt.hashSync(req.body.password, 8),
+        email: req.body.email,
+        //avatar: String,
     });
 
     const user_detail = new User_detail({
-        username: req.body.username,
-        address: req.body.address,
-        province: req.body.province,
-        postal: req.body.postal,
         phone: req.body.phone,
-        email: req.body.email,
+        prefix: req.body.prefix,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
 
 
-    });
-    user_detail.save(err => {
-        if (err) {
-            res.status(500).send({message: err});
 
-        }
     });
     user.save((err, user) => {
         if (err) {
             res.status(500).send({message: err});
             return;
         }
+        Company.find(
+            {
+                tax_id: {$in: req.body.taxid}
+            },
+            (err, tax_ids) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                console.log(tax_ids.map(tax_id => tax_id._id));
+                user.tax_id = tax_ids.map(tax_id => tax_id._id);
 
-        if (req.body.roles) {
+            }
+        );
             Role.find(
                 {
                     name: {$in: req.body.roles}
@@ -73,35 +86,37 @@ exports.signup = (req, res) => {
                         res.status(500).send({message: err});
                         return;
                     }
-
-                    user_detail.roles = roles.map(role => role._id);
-                    user_detail.save(err => {
+                    user.role = roles.map(role => role._id);
+                    user.save(err => {
                         if (err) {
                             res.status(500).send({message: err});
-                            return;
                         }
-                        res.send({message: "User was registered successfully!"});
                     });
                 }
             );
-        } else { // TODO check company exist
-            Role.findOne({name: "freight-forwarder"}, (err, role) => {
+    });
+    user_detail.save(err => {
+        if (err) {
+            res.status(500).send({message: err});
+        }
+        User.find(
+            {
+                username: {$in: req.body.username}
+            },
+            (err, usernames) => {
                 if (err) {
                     res.status(500).send({message: err});
                     return;
                 }
-
-                user_detail.roles = [role._id];
+                user_detail.username = usernames.map(username => username._id);
                 user_detail.save(err => {
                     if (err) {
                         res.status(500).send({message: err});
-                        return;
                     }
-
-                    res.send({message: "User was registered successfully!"});
                 });
-            });
-        }
+                res.send({message: "User was registered successfully!"});
+            }
+        );
     });
 };
 
@@ -134,18 +149,20 @@ exports.signin = (req, res) => {
             var token = jwt.sign({id: user.id}, config.secret, {
                 expiresIn: 86400 // 24 hours
             });
-            User_detail.findOne({
+            User.findOne({
                 username: req.body.username
             })
-                .populate("roles", "-__v")
-                .exec((err, user_detail) => {
+                .populate("role", "-__v")
+                .exec((err, roles) => {
                     res.status(200).send({
                         id: user._id,
                         username: user.username,
                         accessToken: token,
-                        email: user_detail.email,
-                        role: user_detail.roles[0].name,
-                    });
+                        email: user.email,
+                        role: roles.role[0].name,
+                        created_at: user.createdAt,
+                        updated_at: user.updatedAt
                 });
+            });
         });
 };
