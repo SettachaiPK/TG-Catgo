@@ -9,7 +9,7 @@ module.exports = function(app) {
     );
     next();
   });
-
+  app.get("/api/auth/signup/", controller.checktaxid);
   app.post(
     "/api/auth/signup",
     [
