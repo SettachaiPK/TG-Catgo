@@ -5,6 +5,9 @@ const dbConfig = require("./app/config/db.config");
 
 const app = express();
 
+// give permission for fetch resource
+// https://acoshift.me/2019/0004-web-cors.html
+// https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
   origin: "https://localhost:8081"
 };
