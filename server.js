@@ -5,6 +5,9 @@ const dbConfig = require("./app/config/db.config");
 
 const app = express();
 
+// give permission for fetch resource
+// https://acoshift.me/2019/0004-web-cors.html
+// https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
   origin: "https://localhost:8081"
 };
@@ -42,6 +45,7 @@ app.get("/", (req, res) => {
 // routes
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
+require("./app/routes/company.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8080;
