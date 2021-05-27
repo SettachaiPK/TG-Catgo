@@ -31,7 +31,6 @@ if (req.body.taxid) {
                 company_detail.tax_id.push(company._id);
                 company_detail.save();
                 res.send({company_filter: true});
-                //return;
             }
             else {
             res.send({company_filter: false});
@@ -106,8 +105,6 @@ exports.signup = (req, res) => {
                     return;
                 }
                 user_detail.username = username_callback.map(username => username._id);
-
-
                 user_detail.save(err => {
                     if (err) {
                         res.status(500).send({message: err});
@@ -210,7 +207,7 @@ exports.resetPwd = (req, res) => {
             UserId: req.userId
         });
     }
-     if (req.body.token) {
+     else if (req.body.token) {
         jwt.verify(req.body.token, config.secret, (err, decoded) => {
             if (err) {
                 return res.status(401).send({ message: "Link expired!" });
@@ -231,6 +228,7 @@ exports.resetPwd = (req, res) => {
             });
      }
     else {
+        print
         return res.status(401).send({ message: "Token expired!" })
     }
 };
