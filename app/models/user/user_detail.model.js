@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const User_detail = mongoose.model(
     "User_detail",
     new mongoose.Schema({
-        username: [
-            {
+        username:
+            [{
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "User"
-            }
-        ],
+            }]
+        ,
         prefix: String,
         firstname: String,
         lastname: String,

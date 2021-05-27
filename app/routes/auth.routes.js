@@ -1,7 +1,8 @@
-const { verifySignUp } = require("../middlewares");
-const controller = require("../controllers/auth.controller");
-
 module.exports = function(app) {
+  var router = require("express").Router();
+  const { verifySignUp } = require("../middlewares");
+  const controller = require("../controllers/auth.controller");
+
   app.use(function(req, res, next) {
     res.header(
       "Access-Control-Allow-Headers",
@@ -9,14 +10,24 @@ module.exports = function(app) {
     );
     next();
   });
-  app.post("/api/auth/checktaxid/", controller.checktaxid);
-  app.post(
-    "/api/auth/signup",
+
+  router.post("/checktaxid", controller.checktaxid);
+
+  router.post(
+    "/signup",
     [
       verifySignUp.checkDuplicateUsernameOrEmail
     ],
     controller.signup
   );
 
-  app.post("/api/auth/signin", controller.signin);
+  router.post("/signin", controller.signin);
+
+  router.get("/forgot/:email", controller.generateForgotPwdLink);
+
+  router.get("/reset/:token", controller.resetPwd);
+
+  router.post("/reset", controller.resetPwd);
+
+  app.use('/api/auth', router);
 };

@@ -9,20 +9,25 @@ const User = mongoose.model(
       avatar: String,
       created_at: String,
       updated_at: String,
-      role: [
-          {
+      role:
+          [{
               type: mongoose.Schema.Types.ObjectId,
               ref: "Role"
-          }
-      ],
-    tax_id: [
-        {
+          }]
+      ,
+    tax_id:
+        [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "Company"
-        }
-    ],
-
-  },{ timestamps: true })
+        }]
+    ,
+    user_detail:
+        [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User_detail"
+        }]
+,
+  }, { timestamps: true })
 );
 
 module.exports = User;

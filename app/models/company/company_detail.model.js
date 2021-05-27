@@ -5,12 +5,12 @@ const Company_detail = mongoose.model(
     new mongoose.Schema({
         company_name: String,
         address: String,
-        tax_id: [
-                {
+        tax_id:
+                [{
                         type: mongoose.Schema.Types.ObjectId,
                         ref: "Company"
-                }
-        ],
+                }]
+        ,
         company_province: String,
         company_postal: String
     })
