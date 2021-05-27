@@ -40,7 +40,7 @@ if (req.body.taxid) {
     }
 };
 
-exports.signup = async (req, res) => {
+exports.signup = (req, res) => {
     const user = new User({
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
