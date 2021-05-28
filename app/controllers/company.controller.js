@@ -152,20 +152,27 @@ exports.getCompanyDetail = (req, res) => {
 
 exports.updateOneCompanyDetail = (req, res) => {
 
-    CompanyDetail.findById(req.body.companyDetailId
-    ).exec((err, detail) => {
-
-        detail.updateOne( { company_name: req.body.companyName,
-                address: req.body.address,
-                company_province: req.body.province,
-                company_postal: req.body.postal },
+    CompanyDetail.findById(req.body.companyDetailId).populate({path: 'tax_id'})
+        .exec((err, detail) => {
+        detail.tax_id[0].updateOne( { company_name: req.body.companyName },
             [],
             function (err, doc){
                 if (err) {
                     res.status(500).send({message: err});
                     return;
                 }
-                res.status(200).send({status: "updated"})
+                detail.updateOne( { company_name: req.body.companyName,
+                        address: req.body.address,
+                        company_province: req.body.province,
+                        company_postal: req.body.postal },
+                    [],
+                    function (err, doc){
+                        if (err) {
+                            res.status(500).send({message: err});
+                            return;
+                        }
+                        res.status(200).send({status: "updated"})
+                    });
             });
     });
 };

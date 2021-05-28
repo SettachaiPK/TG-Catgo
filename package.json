@@ -13,7 +13,7 @@
     "authentication",
     "mongodb"
   ],
-  "author": "bezkoder",
+  "author": "TG-Cargo Team",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.1",

@@ -45,10 +45,10 @@ exports.checktaxid = (req, res) => {
                     company.company_detail.push(company_detail._id);
                     company.save();
                 });
-                res.send({company_filter: true});
+                res.send({company_exist: false});
             }
             else {
-            res.send({company_filter: false});
+            res.send({company_exist: true});
             }
         })
     }
@@ -225,14 +225,13 @@ exports.resetPwd = (req, res) => {
     if (req.params.token) {
         jwt.verify(req.params.token, config.secret, (err, decoded) => {
             if (err) {
-                return res.status(401).send({ message: "Link expired!" });
+                res.status(401).send(err);
+                return;
             }
             req.userId = decoded.id;
-        });
-
-        console.log(req.userId);
-        res.status(200).send({
-            UserId: req.userId
+            res.status(200).send({
+                UserId: req.userId
+            });
         });
     }
      else if (req.body.token) {
