@@ -9,9 +9,17 @@ const Role = db.role;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
+/**
+ * Check taxid is exist, isn't?
+ * if not, system will create new company
+ * if exist, system will give permission for auto create driver
+ * 
+ * @returns res boolean type
+ * @see 
+ */
 exports.checktaxid = (req, res) => {
-if (req.body.taxid) {
-    Company.find(
+  if (req.body.taxid) {
+      Company.find(
         {
             tax_id: {$in: req.body.taxid}
         },
@@ -46,7 +54,14 @@ if (req.body.taxid) {
     }
 };
 
+/**
+ * Register
+ * 
+ * @returns boolean
+ * @see 
+ */
 exports.signup = (req, res) => {
+
     const user = new User({
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
@@ -131,51 +146,57 @@ exports.signup = (req, res) => {
     });
 };
 
+/**
+ * Login
+ * 
+ * @returns boolean 
+ * @see 
+ */
 exports.signin = (req, res) => {
     User.findOne({
         username: req.body.username
     })
-        .exec((err, user) => {
-            if (err) {
-                res.status(500).send({message: err});
-                return;
-            }
+    .exec((err, user) => {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
 
-            if (!user) {
-                return res.status(404).send({message: "User Not found."});
-            }
+        if (!user) {
+            return res.status(404).send({message: "User Not found."});
+        }
 
-            var passwordIsValid = bcrypt.compareSync(
-                req.body.password,
-                user.password
-            );
+        var passwordIsValid = bcrypt.compareSync(
+            req.body.password,
+            user.password
+        );
 
-            if (!passwordIsValid) {
-                return res.status(401).send({
-                    accessToken: null,
-                    message: "Invalid Password!"
-                });
-            }
-
-            var token = jwt.sign({id: user.id}, config.secret, {
-                expiresIn: 86400 // 24 hours
+        if (!passwordIsValid) {
+            return res.status(401).send({
+                accessToken: null,
+                message: "Invalid Password!"
             });
-                User.findOne({
-                    username: req.body.username
-                })
-                    .populate("role", "-__v")
-                    .exec((err, role_callback) => {
-                        res.status(200).send({
-                            id: user._id,
-                            username: user.username,
-                            accessToken: token,
-                            email: user.email,
-                            role: role_callback.role[0].name,
-                            created_at: user.createdAt,
-                            updated_at: user.updatedAt
-                    });
-                });
+        }
+
+        var token = jwt.sign({id: user.id}, config.secret, {
+            expiresIn: 86400 // 24 hours
         });
+        User.findOne({
+            username: req.body.username
+        })
+            .populate("role", "-__v")
+            .exec((err, roles) => {
+                res.status(200).send({
+                    id: user._id,
+                    username: user.username,
+                    accessToken: token,
+                    email: user.email,
+                    role: roles.role[0].name,
+                    created_at: user.createdAt,
+                    updated_at: user.updatedAt
+            });
+        });
+    });
 };
 
 exports.generateForgotPwdLink = (req, res) => {
