@@ -25,8 +25,6 @@ isTgAdmin = (req, res, next) => {
                     res.status(500).send({message: err});
                     return;
                 }
-                console.log(user);
-                console.log(user.role[0].name);
                 if (user.role[0].name === "tg-admin") {
                     next();
                     return;
@@ -44,8 +42,6 @@ isAdmin = (req, res, next) => {
                     res.status(500).send({message: err});
                     return;
                 }
-                console.log(user);
-                console.log(user.role[0].name);
                 if (user.role[0].name === "admin") {
                     next();
                     return;

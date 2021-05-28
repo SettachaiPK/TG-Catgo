@@ -1,7 +1,8 @@
 module.exports = app => {
   var router = require("express").Router();
   const { authJwt } = require("../middlewares");
-  const controller = require("../controllers/user.controller");
+  const userController = require("../controllers/user.controller");
+  const companyController = require("../controllers/company.controller");
 
   app.use(function(req, res, next) {
     res.header(
@@ -11,25 +12,27 @@ module.exports = app => {
     next();
   });
 
-
-  router.get("/all", controller.allAccess)
-
   router.get(
       "/user",
       [authJwt.verifyToken, authJwt.isDriver],
-      controller.userDetail);
+      userController.userDetail);
 
   router.get(
       "/mod",
       [authJwt.verifyToken, authJwt.isFreightForwarder],
-      controller.moderatorBoard
+      userController.moderatorBoard
   );
 
   router.get(
       "/admin",
       [authJwt.verifyToken, authJwt.isAdmin],
-      controller.adminBoard
+      userController.adminBoard
   );
 
-  app.use('/api/test', router);
+  router.get(
+      "/detail-user",
+      [authJwt.verifyToken],
+      companyController.getUserCompanyDetail);
+
+  app.use('/apis/user', router);
 };

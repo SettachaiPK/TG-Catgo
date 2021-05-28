@@ -28,6 +28,7 @@ exports.userDetail = (req, res) => {
         });
 }
 
+
 exports.userBoard = (req, res) => {
     res.status(200).send("Public Content.");
 };

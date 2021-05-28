@@ -29,7 +29,14 @@ if (req.body.taxid) {
                     address: req.body.address,
                 });
                 company_detail.tax_id.push(company._id);
-                company_detail.save();
+                company_detail.save( err => {
+                    if (err){
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    company.company_detail.push(company_detail._id);
+                    company.save();
+                });
                 res.send({company_filter: true});
             }
             else {
@@ -217,7 +224,7 @@ exports.resetPwd = (req, res) => {
 
         User.findById(req.userId).exec((err, user_callback) => {
             user_callback.updateOne( { password: bcrypt.hashSync(req.body.password, 8) },
-                { _id: req.userId },
+                [],
                 function (err, doc){
                     if (err) {
                         res.status(500).send({message: err});
@@ -228,7 +235,6 @@ exports.resetPwd = (req, res) => {
             });
      }
     else {
-        print
         return res.status(401).send({ message: "Token expired!" })
     }
 };

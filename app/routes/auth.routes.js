@@ -29,5 +29,5 @@ module.exports = function(app) {
 
   router.post("/reset", controller.resetPwd);
 
-  app.use('/api/auth', router);
+  app.use('/apis/auth', router);
 };
