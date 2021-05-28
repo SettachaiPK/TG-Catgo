@@ -1,4 +1,5 @@
 const db = require("../models");
+const User = db.user;
 const Company = db.company;
 const CompanyDetail = db.company_detail;
 const updateableDetail = [
@@ -151,7 +152,7 @@ exports.getCompanyDetail = (req, res) => {
 
 exports.updateOneCompanyDetail = (req, res) => {
 
-    Company_detail.findById(req.body.companyDetailId
+    CompanyDetail.findById(req.body.companyDetailId
     ).exec((err, detail) => {
 
         detail.updateOne( { company_name: req.body.companyName,
