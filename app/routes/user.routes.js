@@ -2,7 +2,6 @@ module.exports = app => {
   var router = require("express").Router();
   const { authJwt } = require("../middlewares");
   const userController = require("../controllers/user.controller");
-  const companyController = require("../controllers/company.controller");
 
   app.use(function(req, res, next) {
     res.header(
@@ -13,26 +12,19 @@ module.exports = app => {
   });
 
   router.get(
-      "/user",
-      [authJwt.verifyToken, authJwt.isDriver],
+      "/",
+      [authJwt.verifyToken],
       userController.userDetail);
 
   router.get(
-      "/mod",
+      "/user-company-detail",
       [authJwt.verifyToken, authJwt.isFreightForwarder],
-      userController.moderatorBoard
-  );
+      userController.getUserCompanyDetail);
 
-  router.get(
-      "/admin",
-      [authJwt.verifyToken, authJwt.isAdmin],
-      userController.adminBoard
-  );
-
-  router.get(
-      "/detail-user",
+  router.post(
+      "/edit-personal-information",
       [authJwt.verifyToken],
-      companyController.getUserCompanyDetail);
+      userController.editPersonalInfo);
 
   app.use('/apis/user', router);
 };

@@ -18,6 +18,22 @@ verifyToken = (req, res, next) => {
     });
 };
 
+isEnable = (req, res, next) => {
+    User.findById(req.userId).exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
+            if (user.status === true) {
+                next();
+                return;
+            }
+            res.status(403).send({message: "User Deactivated!"});
+
+        }
+    );
+}
+
 isTgAdmin = (req, res, next) => {
     User.findById(req.userId).populate("role", "-__v")
         .exec((err, user) => {
@@ -25,7 +41,7 @@ isTgAdmin = (req, res, next) => {
                     res.status(500).send({message: err});
                     return;
                 }
-                if (user.role[0].name === "tg-admin") {
+                if (user.role[0].name === "tg-admin" || user.role[0].name === "admin") {
                     next();
                     return;
                 }
@@ -60,7 +76,7 @@ isFreightForwarder = (req, res, next) => {
                     res.status(500).send({message: err});
                     return;
                 }
-                if (user.role[0].name === "freight-forwarder") {
+                if (user.role[0].name === "freight-forwarder" || user.role[0].name === "admin") {
                     next();
                     return;
                 }
@@ -77,7 +93,7 @@ isDriver = (req, res, next) => {
                 res.status(500).send({message: err});
                 return;
             }
-            if (user.role[0].name === "driver") {
+            if (user.role[0].name === "driver" || user.role[0].name === "admin") {
                 next();
 
             } else {

@@ -8,8 +8,9 @@ const Company = mongoose.model(
         company_detail: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "Company_detail"
-        }]
-        ,
+        }],
+        driver_count: Number,
+        job_count: Number
     })
 );
 

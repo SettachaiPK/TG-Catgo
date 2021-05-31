@@ -27,25 +27,32 @@ exports.checktaxid = (req, res) => {
             if (taxid.length == 0) {
                 const company = new Company({
                     tax_id: req.body.taxid,
-                    company_name: req.body.name
-                });
-                company.save();
-                const company_detail = new Company_detail({
                     company_name: req.body.name,
-                    company_province: req.body.province,
-                    company_postal: req.body.postal,
-                    address: req.body.address,
+                    driver_count: 0,
+                    job_count: 0
                 });
-                company_detail.tax_id.push(company._id);
-                company_detail.save( err => {
+                company.save(err => {
                     if (err){
                         res.status(500).send({message: err});
                         return;
                     }
-                    company.company_detail.push(company_detail._id);
-                    company.save();
+                    const company_detail = new Company_detail({
+                        company_name: req.body.name,
+                        company_province: req.body.province,
+                        company_postal: req.body.postal,
+                        address: req.body.address,
+                    });
+                    company_detail.tax_id.push(company._id);
+                    company_detail.save( err => {
+                        if (err){
+                            res.status(500).send({message: err});
+                            return;
+                        }
+                        company.company_detail.push(company_detail._id);
+                        company.save();
+                    });
+                    res.send({company_exist: false});
                 });
-                res.send({company_exist: false});
             }
             else {
             res.send({company_exist: true});
@@ -66,7 +73,8 @@ exports.signup = (req, res) => {
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
         email: req.body.email,
-        //avatar: String,
+        avatar: "/assets/img/misc/profile.jpg",
+        status: true,
     });
 
     const user_detail = new User_detail({
@@ -82,17 +90,21 @@ exports.signup = (req, res) => {
             res.status(500).send({message: err});
             return;
         }
-        Company.find(
-            {
-                tax_id: {$in: req.body.taxid}
-            },
-            (err, tax_id_callback) => {
+        Company.find({tax_id: {$in: req.body.taxid}}, (err, tax_id_callback) => {
                 if (err) {
                     res.status(500).send({message: err});
                     return;
                 }
                 user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
-
+                if (req.body.roles === 'driver') {
+                    console.log(tax_id_callback[0]._id);
+                    tax_id_callback[0].driver_count += 1;
+                    tax_id_callback[0].save((err, job) => {
+                        if (err) {
+                            res.status(500).send({message: err});
+                        }
+                    });
+                }
             }
         );
         Role.find(
@@ -112,38 +124,39 @@ exports.signup = (req, res) => {
                 });
             }
         );
-    });
-    user_detail.save(err => {
-        if (err) {
-            res.status(500).send({message: err});
-        }
-        User.find(
-            {
-                username: {$in: req.body.username}
-            },
-            (err, username_callback) => {
-                if (err) {
-                    res.status(500).send({message: err});
-                    return;
-                }
-                user_detail.username = username_callback.map(username => username._id);
-                user_detail.save(err => {
+        user_detail.save(err => {
+            if (err) {
+                res.status(500).send({message: err});
+            }
+            User.find(
+                {
+                    username: {$in: req.body.username}
+                },
+                (err, username_callback) => {
                     if (err) {
                         res.status(500).send({message: err});
                         return;
                     }
-                    user.user_detail.push(user_detail._id);
-                    user.save(err => {
+                    user_detail.username = username_callback.map(username => username._id);
+                    user_detail.save(err => {
                         if (err) {
                             res.status(500).send({message: err});
                             return;
                         }
-                        res.send({message: "User was registered successfully!"});
+                        user.user_detail.push(user_detail._id);
+                        user.save(err => {
+                            if (err) {
+                                res.status(500).send({message: err});
+                                return;
+                            }
+                            res.send({message: "User was registered successfully!"});
+                        });
                     });
-                });
-            },
-        );
+                },
+            );
+        });
     });
+
 };
 
 /**
@@ -179,7 +192,7 @@ exports.signin = (req, res) => {
         }
 
         var token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400 // 24 hours
+            expiresIn: 86400000 // 24 hours
         });
         User.findOne({
             username: req.body.username

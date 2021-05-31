@@ -13,7 +13,12 @@ const User_detail = mongoose.model(
         firstname: String,
         lastname: String,
         phone: String,
+        address: String,
+        province: String,
+        zipcode: String,
     }, { timestamps: true })
+
 );
 
-module.exports = User_detail;
+module.exports = User_detail
+;
