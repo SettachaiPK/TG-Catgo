@@ -11,7 +11,7 @@ exports.overviewAllJob = (req, res) => {
         .populate('tax_id')
         .exec((err, user) => {
 
-            Job.find({ 'company': user.tax_id[0]._id}).exec((err,callback) => {
+            Job.find({'company': user.tax_id[0]._id}).exec((err, callback) => {
                 console.log(callback);
                 res.status(200).send(callback)
             });
@@ -36,7 +36,7 @@ exports.createJob = (req, res) => {
         User.findById(req.userId).populate('tax_id').exec((err, user) => {
             job.company = user.tax_id[0];
             console.log(job.company);
-            job.save((err,user) => {
+            job.save((err, user) => {
                 if (err) {
                     res.status(500).send({message: err});
                     return;
@@ -48,30 +48,33 @@ exports.createJob = (req, res) => {
 };
 
 
-
-exports.selectDriver = (req,res ) => {
-    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
-        if (err) {
-            res.status(500).send({message: err});
-            return;
-        }
-        if (job_callback.driver.length > 0){
-            job_callback.driver.pop()
-        }
-        console.log(job_callback.driver.length);
-        job_callback.driver.push(req.body.driver)
-        job_callback.save((err, job) => {
+exports.selectDriver = (req, res) => {
+    Job.findOne({'_id': req.params.job_id, 'status': 2})
+        .populate("driver", '-password')
+        .exec((err, job_callback) => {
             if (err) {
-            res.status(500).send({message: err});
-            return;
+                res.status(500).send({message: err});
+                return;
             }
-            res.status(200).send(job_callback)
-        })
-    });
+            if (job_callback.driver.length > 0) {
+                job_callback.driver.pop()
+            }
+            console.log(job_callback.driver.length);
+            job_callback.driver.push(req.body.driver)
+            job_callback.status = 3;
+            job_callback.save((err, job) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+
+                res.status(200).send({message: "Driver selected"})
+            })
+        });
 }
 
-exports.jobDetail = (req,res ) => {
-    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
+exports.jobDetail = (req, res) => {
+    Job.findById({_id: req.params.job_id}).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
             res.status(500).send({message: err});
             return;

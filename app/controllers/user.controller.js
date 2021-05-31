@@ -46,20 +46,20 @@ exports.editPersonalInfo = (req, res) => {
                                 res.status(500).send({message: err});
                                 return;
                             }
-                            res.status(200).send(user)
+                            res.status(200).send({message: "updated"})
                         });
                 });
         });
 }
 
-exports.userBoard = (req, res) => {
-    res.status(200).send("Public Content.");
-};
+exports.getUserCompanyDetail = (req, res) => {
+    User.findById(req.userId)
+        .populate({
+            path: 'tax_id',
+            populate: { path: 'company_detail' }
+        })
+        .exec((err, user) => {
+            res.status(200).send(user.tax_id[0]);
 
-exports.adminBoard = (req, res) => {
-    res.status(200).send("Admin Content.");
-};
-
-exports.moderatorBoard = (req, res) => {
-    res.status(200).send("Moderator Content.");
+        });
 };
