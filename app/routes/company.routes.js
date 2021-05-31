@@ -42,10 +42,4 @@ module.exports = function(app) {
     [authJwt.verifyToken, authJwt.isAdmin],
     controller.createCompany
   );
-
-  app.post(
-      "/apis/company/update",
-      [authJwt.verifyToken],
-      companyController.updateOneCompanyDetail
-  );
 };

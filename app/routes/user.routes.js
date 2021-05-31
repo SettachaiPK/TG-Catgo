@@ -30,9 +30,14 @@ module.exports = app => {
   );
 
   router.get(
-      "/detail-user",
+      "/user-company-detail",
       [authJwt.verifyToken],
       companyController.getUserCompanyDetail);
+
+  router.post(
+      "/edit-personal-information",
+      [authJwt.verifyToken],
+      userController.editPersonalInfo);
 
   app.use('/apis/user', router);
 };

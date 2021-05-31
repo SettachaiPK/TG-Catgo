@@ -66,7 +66,7 @@ exports.signup = (req, res) => {
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
         email: req.body.email,
-        //avatar: String,
+        avatar: "/assets/img/misc/profile.jpg",
     });
 
     const user_detail = new User_detail({
@@ -179,7 +179,7 @@ exports.signin = (req, res) => {
         }
 
         var token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400 // 24 hours
+            expiresIn: 86400000 // 24 hours
         });
         User.findOne({
             username: req.body.username

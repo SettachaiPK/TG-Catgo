@@ -24,5 +24,17 @@ module.exports = app => {
         companyController.getCompanyDetail
     );
 
+    router.post(
+        "/company/:company_detail_id/update",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        companyController.updateOneCompanyDetail
+    );
+
+    router.get(
+        "/company/:company_id/",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        companyController.getCompanyDetail
+    );
+
     app.use('/apis/admin', router);
 };

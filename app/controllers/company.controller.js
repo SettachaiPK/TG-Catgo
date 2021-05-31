@@ -142,17 +142,17 @@ exports.getAllCompany = (req, res) => {
 };
 
 exports.getCompanyDetail = (req, res) => {
-    Company.findById(req.body.companyId).populate({
+    Company.findById(req.params.company_id).populate({
         path: 'company_detail'
     }).exec((err, detail) => {
-        console.log(company);
-        res.status(200).send(company);
+        console.log(detail);
+        res.status(200).send(detail);
     });
 };
 
 exports.updateOneCompanyDetail = (req, res) => {
 
-    CompanyDetail.findById(req.body.companyDetailId).populate({path: 'tax_id'})
+    CompanyDetail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
         .exec((err, detail) => {
         detail.tax_id[0].updateOne( { company_name: req.body.companyName },
             [],

@@ -17,17 +17,40 @@ exports.userDetail = (req, res) => {
         .exec((err, user) => {
             console.log(user)
             res.status(200).send({
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                role: user.role[0].name,
+                prefix: user.user_detail[0].prefix,
                 firstname: user.user_detail[0].firstname,
-                created_at: user.createdAt,
-                updated_at: user.updatedAt
+                lastname: user.user_detail[0].lastname,
+                phone: user.user_detail[0].phone,
+                avatar: user.avatar
             });
         });
 }
 
+exports.editPersonalInfo = (req, res) => {
+    User.findById(req.userId).populate('role').populate('user_detail')
+        .exec((err, user) => {
+            user.updateOne( { avatar: req.body.avatar },
+                [],
+                function (err, doc){
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    user.user_detail[0].updateOne( { prefix: req.body.prefix,
+                            firstname: req.body.firstname,
+                            lastname: req.body.lastname,
+                            phone: req.body.phone },
+                        [],
+                        function (err, doc){
+                            if (err) {
+                                res.status(500).send({message: err});
+                                return;
+                            }
+                            res.status(200).send(user)
+                        });
+                });
+        });
+}
 
 exports.userBoard = (req, res) => {
     res.status(200).send("Public Content.");
