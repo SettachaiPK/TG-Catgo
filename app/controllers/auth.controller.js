@@ -9,12 +9,35 @@ const Role = db.role;
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
+exports.getcompanydetail_ifexist = (req, res) => {
+    console.log(req.body.taxid)
+    Company.find({ tax_id: {$in: req.body.taxid} }).populate('company_detail')
+        .exec((err, company_detail) => {
+            console.log(company_detail)
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
+            if (company_detail.length == 0) {
+                res.send({company_exist: false});
+                return
+            }
+            res.status(200).send({
+                company_exist: true, 
+                company_detail: company_detail[0].company_detail[0]
+            });
+    });
+}
+
 /**
  * Check taxid is exist, isn't?
  * if not, system will create new company
  * if exist, system will give permission for auto create driver
  * 
  * @returns res boolean type
+ * 
+ * @value ads
+ * 
  * @see 
  */
 exports.checktaxid = (req, res) => {
@@ -96,14 +119,18 @@ exports.signup = (req, res) => {
                     return;
                 }
                 user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
+                console.log(tax_id_callback[0].driver_count);
                 if (req.body.roles === 'driver') {
-                    console.log(tax_id_callback[0]._id);
-                    tax_id_callback[0].driver_count += 1;
+                    //console.log(tax_id_callback[0]._id);
+                    console.log(tax_id_callback[0].driver_count);
+                    tax_id_callback[0].driver_count +=1;
                     tax_id_callback[0].save((err, job) => {
                         if (err) {
                             res.status(500).send({message: err});
+                            console.log("failed");
                         }
                     });
+                    console.log("save already");
                 }
             }
         );
@@ -156,7 +183,6 @@ exports.signup = (req, res) => {
             );
         });
     });
-
 };
 
 /**

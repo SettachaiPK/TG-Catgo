@@ -3,6 +3,9 @@ const config = require("../config/auth.config.js");
 const db = require("../models");
 const User = db.user;
 
+/** Check token by get access token first.
+ * Then return the confirm message.
+ */
 verifyToken = (req, res, next) => {
     let token = req.headers["x-access-token"];
     if (!token) {
@@ -18,6 +21,8 @@ verifyToken = (req, res, next) => {
     });
 };
 
+/**Chack user status by
+ * define status code */
 isEnable = (req, res, next) => {
     User.findById(req.userId).exec((err, user) => {
             if (err) {

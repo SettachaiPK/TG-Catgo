@@ -7,6 +7,7 @@ const CompanyDetail = db.company_detail;
 
 var bcrypt = require("bcryptjs");
 
+
 exports.getAllCompany =  (req, res) => {
     Company.find().exec((err, AllCompany) => {
         res.status(200).send(AllCompany);
