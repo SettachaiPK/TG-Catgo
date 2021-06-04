@@ -18,7 +18,7 @@ module.exports = app => {
 
   router.get(
       "/user-company-detail",
-      [authJwt.verifyToken, authJwt.isFreightForwarder],
+      [authJwt.verifyToken /*, authJwt.isFreightForwarder*/],
       userController.getUserCompanyDetail);
 
   router.post(

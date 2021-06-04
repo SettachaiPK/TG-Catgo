@@ -11,6 +11,8 @@ module.exports = function(app) {
     next();
   });
 
+  router.post("/companydetail_ifexist", authController.getcompanydetail_ifexist);
+
   router.post("/checktaxid", authController.checktaxid);
 
   router.post(
