@@ -44,7 +44,6 @@ exports.jobTgadminDetail = (req,res ) => {
             res.status(500).send({message: err});
             return;
         }
-        console.log(job_callback);
 
         res.status(200).send(job_callback)
     });

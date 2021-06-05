@@ -18,7 +18,6 @@ exports.overviewAllDriver = (req, res) => {
                 User.find({'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
                     .populate("user_detail")
                     .exec((err, callback) => {
-                    console.log(callback);
                     res.status(200).send(callback)
                 });
             })
@@ -33,7 +32,6 @@ exports.driverDetail = (req, res) => {
                 User.findOne({'_id': req.params.driver_id, 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
                     .populate("user_detail")
                     .exec((err, callback) => {
-                        console.log(callback);
                         res.status(200).send(callback)
                     });
             })
@@ -87,6 +85,7 @@ exports.createDriver = (req, res) => {
                 username: req.body.username,
                 password: bcrypt.hashSync(req.body.password, 8),
                 email: req.body.email,
+                status: true,
                 avatar: "/assets/img/misc/profile.jpg",
             });
 
@@ -146,7 +145,7 @@ exports.createDriver = (req, res) => {
                                         res.status(500).send({message: err});
                                         return;
                                     }
-                                    res.send({message: "User was registered successfully!"});
+                                    res.send({id: user._id});
                                 });
                             });
                         },
@@ -170,7 +169,6 @@ exports.jobDriverDetail = (req,res ) => {
             res.status(500).send({message: err});
             return;
         }
-        console.log(job_callback);
         res.status(200).send(job_callback)
     });
 }

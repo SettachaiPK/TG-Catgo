@@ -11,11 +11,9 @@ exports.allAccess = (req, res) => {
 };
 
 exports.userDetail = (req, res) => {
-    console.log(req.userId);
     User.findById(req.userId)
         .populate('role').populate('user_detail')
         .exec((err, user) => {
-            console.log(user)
             res.status(200).send({
                 prefix: user.user_detail[0].prefix,
                 firstname: user.user_detail[0].firstname,

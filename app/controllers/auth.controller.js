@@ -23,7 +23,7 @@ exports.getcompanydetail_ifexist = (req, res) => {
                 return
             }
             res.status(200).send({
-                company_exist: true, 
+                company_exist: true,
                 company_detail: company_detail[0].company_detail[0]
             });
     });
@@ -33,12 +33,12 @@ exports.getcompanydetail_ifexist = (req, res) => {
  * Check taxid is exist, isn't?
  * if not, system will create new company
  * if exist, system will give permission for auto create driver
- * 
+ *
  * @returns res boolean type
- * 
+ *
  * @value ads
- * 
- * @see 
+ *
+ * @see
  */
 exports.checktaxid = (req, res) => {
   if (req.body.taxid) {
@@ -86,9 +86,9 @@ exports.checktaxid = (req, res) => {
 
 /**
  * Register
- * 
+ *
  * @returns boolean
- * @see 
+ * @see
  */
 exports.signup = (req, res) => {
 
@@ -121,9 +121,7 @@ exports.signup = (req, res) => {
                 user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
                 console.log(tax_id_callback[0].driver_count);
                 if (req.body.roles === 'driver') {
-                    //console.log(tax_id_callback[0]._id);
-                    console.log(tax_id_callback[0].driver_count);
-                    tax_id_callback[0].driver_count +=1;
+                    tax_id_callback[0].driver_count += 1;
                     tax_id_callback[0].save((err, job) => {
                         if (err) {
                             res.status(500).send({message: err});
@@ -187,9 +185,9 @@ exports.signup = (req, res) => {
 
 /**
  * Login
- * 
- * @returns boolean 
- * @see 
+ *
+ * @returns boolean
+ * @see
  */
 exports.signin = (req, res) => {
     User.findOne({
@@ -239,7 +237,6 @@ exports.signin = (req, res) => {
 };
 
 exports.generateForgotPwdLink = (req, res) => {
-    console.log(req.params.email);
     User.findOne({
         email: req.params.email,
     }).exec((err, user) => {
@@ -253,7 +250,6 @@ exports.generateForgotPwdLink = (req, res) => {
         var token = jwt.sign({id: user.id}, config.secret, {
             expiresIn: 86400 // 24 hours
         });
-        console.log(token)
         res.status(200).send({
             tokenForgotPwdLink: token
         });

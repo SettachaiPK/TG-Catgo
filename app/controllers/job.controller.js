@@ -12,7 +12,6 @@ exports.overviewAllJob = (req, res) => {
         .exec((err, user) => {
 
             Job.find({'company': user.tax_id[0]._id}).exec((err, callback) => {
-                console.log(callback);
                 res.status(200).send(callback)
             });
         });
@@ -20,7 +19,7 @@ exports.overviewAllJob = (req, res) => {
 
 exports.createJob = (req, res) => {
     const job = new Job({
-        status: 0,
+        status: 1, // Simulated TG API Matched job
         awbNumber: req.body.awbNumber,
         hwbSerialNumber: req.body.hwbSerialNumber,
         flightNumber: req.body.flightNumber,
@@ -35,7 +34,6 @@ exports.createJob = (req, res) => {
         }
         User.findById(req.userId).populate('tax_id').exec((err, user) => {
             job.company = user.tax_id[0];
-            console.log(job.company);
             job.save((err, user) => {
                 if (err) {
                     res.status(500).send({message: err});
@@ -59,7 +57,6 @@ exports.selectDriver = (req, res) => {
             if (job_callback.driver.length > 0) {
                 job_callback.driver.pop()
             }
-            console.log(job_callback.driver.length);
             job_callback.driver.push(req.body.driver)
             job_callback.status = 3;
             job_callback.save((err, job) => {
@@ -79,7 +76,6 @@ exports.jobDetail = (req, res) => {
             res.status(500).send({message: err});
             return;
         }
-        console.log(job_callback);
 
         res.status(200).send(job_callback)
     });
