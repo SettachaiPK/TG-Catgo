@@ -57,11 +57,6 @@ exports.getUserCompanyDetail = (req, res) => {
             populate: { path: 'company_detail' }
         })
         .exec((err, user) => {
-            console.log('name :', user.tax_id[0].company_name)
-            console.log('taxId :', user.tax_id[0].tax_id)
-            console.log('address :', user.tax_id[0].company_detail[0].address)
-            console.log('province :', user.tax_id[0].company_detail[0].company_province)
-            console.log('zipcode :', user.tax_id[0].company_detail[0].company_postal)
             res.status(200).send({
                 'name' : user.tax_id[0].company_name,
                 'address' : user.tax_id[0].company_detail[0].address,
