@@ -10,10 +10,8 @@ var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 exports.getcompanydetail_ifexist = (req, res) => {
-    console.log(req.body.taxid)
     Company.find({ tax_id: {$in: req.body.taxid} }).populate('company_detail')
         .exec((err, company_detail) => {
-            console.log(company_detail)
             if (err) {
                 res.status(500).send({message: err});
                 return;
@@ -119,16 +117,13 @@ exports.signup = (req, res) => {
                     return;
                 }
                 user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
-                console.log(tax_id_callback[0].driver_count);
                 if (req.body.roles === 'driver') {
                     tax_id_callback[0].driver_count += 1;
                     tax_id_callback[0].save((err, job) => {
                         if (err) {
                             res.status(500).send({message: err});
-                            console.log("failed");
                         }
                     });
-                    console.log("save already");
                 }
             }
         );
