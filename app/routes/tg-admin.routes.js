@@ -1,8 +1,7 @@
 module.exports = app => {
     var router = require("express").Router();
     const { authJwt } = require("../middlewares");
-    const userController = require("../controllers/user.controller");
-    const companyController = require("../controllers/company.controller");
+    const tgAdminController = require("../controllers/tg-admin.controller")
 
     app.use(function(req, res, next) {
         res.header(
@@ -11,6 +10,24 @@ module.exports = app => {
         );
         next();
     });
+
+    router.get(
+        "/",
+        [authJwt.verifyToken, authJwt.isTgAdmin],
+        tgAdminController.getAllJob
+    );
+
+    router.get("/:job_id",
+        [authJwt.verifyToken, authJwt.isTgAdmin],
+        tgAdminController.jobTgadminDetail
+    );
+
+    router.post(
+        "/:job_id/pickup",
+        [authJwt.verifyToken, authJwt.isTgAdmin],
+        tgAdminController.jobPickUp
+    );
+
 
     app.use('/apis/tgadmin', router);
 };

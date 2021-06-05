@@ -1,8 +1,8 @@
 module.exports = app => {
     var router = require("express").Router();
     const { authJwt } = require("../middlewares");
-    const userController = require("../controllers/user.controller");
-    const companyController = require("../controllers/company.controller");
+    const { verifySignUp } = require("../middlewares");
+    const adminController = require("../controllers/admin.controller");
 
     app.use(function(req, res, next) {
         res.header(
@@ -15,13 +15,43 @@ module.exports = app => {
     router.get(
         "/company",
         [authJwt.verifyToken, authJwt.isAdmin],
-        companyController.getAllCompany
+        adminController.getAllCompany
     );
 
     router.get(
         "/:company_id/overview",
-        [authJwt.isAdmin],
-        companyController.getCompanyDetail
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.getCompanyDetail
+    );
+
+    router.post(
+        "/company/:company_detail_id/update",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.updateOneCompanyDetail
+    );
+
+    router.get(
+        "/company/:company_id/",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.getCompanyDetail
+    );
+
+    router.post(
+        "/company/:company_id/delete_user",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.deleteOneUser
+    );
+
+    router.get(
+        "/company/:company_id/:user_id",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.viewEditUserInfo
+    );
+
+    router.post(
+        "/company/:company_id/:user_id",
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        adminController.adminEditUserInfo
     );
 
     app.use('/apis/admin', router);

@@ -9,6 +9,7 @@ const User = mongoose.model(
       avatar: String,
       created_at: String,
       updated_at: String,
+      status: Boolean,
       role:
           [{
               type: mongoose.Schema.Types.ObjectId,
