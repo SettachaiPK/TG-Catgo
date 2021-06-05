@@ -9,33 +9,17 @@ const app = express();
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
-  origin: "https://localhost:8080"
+  origin: "http://localhost:8080"
 };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
+app.use(cors()); // remove corsOptions to allow all origins
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
-
-const db = require("./app/models");
-const Role = db.role;
-
-db.mongoose
-  .connect('mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Automated-Test?retryWrites=true&w=majority', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  })
-  .then(() => {
-    console.log("Successfully connect to MongoDB.");
-    initial();
-  })
-  .catch(err => {
-    console.error("Connection error", err);
-    process.exit();
-  });
 
 // simple route
 app.get("/", (req, res) => {
@@ -56,6 +40,24 @@ const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
+
+// connect to database
+const db = require("./app/models");
+const Role = db.role;
+
+db.mongoose
+    .connect('mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Automated-Test?retryWrites=true&w=majority', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    })
+    .then(() => {
+      console.log("Successfully connect to MongoDB.");
+      initial();
+    })
+    .catch(err => {
+      console.error("Connection error", err);
+      process.exit();
+    });
 
 function initial() {
   Role.estimatedDocumentCount((err, count) => {
