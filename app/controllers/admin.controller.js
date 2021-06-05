@@ -55,7 +55,7 @@ exports.deleteOneUser = (req,res) => {
     Job.find({ driver:req.body.user_id})
         .exec((err, result) => {
         if (result.length > 0) {
-            res.status(400).send({message: "Can't delete. This driver has a job that doesn't complete"});
+            res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
             return;
         }
             User.findOne({_id: req.body.user_id }).populate("role")
@@ -63,7 +63,6 @@ exports.deleteOneUser = (req,res) => {
                     if (user_detail.role[0].name === 'driver'){
                         Company.findById(req.params.company_id)
                             .exec((err1, company_callback) => {
-                                console.log(company_callback);
                                 company_callback.driver_count -= 1;
                                 company_callback.save((err, job) => {
                                     if (err) {
@@ -94,7 +93,6 @@ exports.deleteOneUser = (req,res) => {
 exports.viewEditUserInfo = (req, res) => {
     User.findById(req.params.user_id).populate("user_detail")
         .exec((err, callback) => {
-            console.log(callback);
             res.status(200).send(callback)
     });
 }

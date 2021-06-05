@@ -9,7 +9,7 @@ const app = express();
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
-  origin: "https://localhost:8081"
+  origin: "https://localhost:8080"
 };
 
 app.use(cors(corsOptions));
@@ -24,7 +24,7 @@ const db = require("./app/models");
 const Role = db.role;
 
 db.mongoose
-  .connect(`mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Test?retryWrites=true&w=majority`, {
+  .connect('mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Automated-Test?retryWrites=true&w=majority', {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })
