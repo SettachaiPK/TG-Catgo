@@ -224,6 +224,7 @@ exports.signin = (req, res) => {
                     accessToken: token,
                     email: user.email,
                     role: roles.role[0].name,
+                    avatar: user.avatar,
                     created_at: user.createdAt,
                     updated_at: user.updatedAt
             });
