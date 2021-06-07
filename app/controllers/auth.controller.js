@@ -251,6 +251,7 @@ exports.generateForgotPwdLink = (req, res) => {
     });
 };
 
+
 exports.resetPwd = (req, res) => {
     if (req.params.token) {
         jwt.verify(req.params.token, config.secret, (err, decoded) => {
@@ -264,7 +265,7 @@ exports.resetPwd = (req, res) => {
             });
         });
     }
-     else if (req.body.token) {
+    else if (req.body.token) {
         jwt.verify(req.body.token, config.secret, (err, decoded) => {
             if (err) {
                 return res.status(401).send({ message: "Link expired!" });
@@ -282,9 +283,11 @@ exports.resetPwd = (req, res) => {
                     }
                     res.status(200).send({status: "updated"})
                 });
-            });
-     }
+        });
+    }
     else {
         return res.status(401).send({ message: "Token expired!" })
     }
 };
+
+

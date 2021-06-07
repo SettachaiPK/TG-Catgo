@@ -18,13 +18,27 @@ module.exports = app => {
 
   router.get(
       "/user-company-detail",
-      [authJwt.verifyToken /*, authJwt.isFreightForwarder*/],
-      userController.getUserCompanyDetail);
+      [authJwt.verifyToken],
+      userController.getUserCompanyDetail
+  );
 
   router.post(
       "/edit-personal-information",
       [authJwt.verifyToken],
-      userController.editPersonalInfo);
+      userController.editPersonalInfo
+  );
+
+  router.post(
+      "/edit-company",
+      [authJwt.verifyToken ,authJwt.isFreightForwarder],
+      userController.updateOneCompanyDetail
+  );
+
+  router.post(
+      "/change-pwd",
+      [authJwt.verifyToken],
+      userController.changePwd
+  );
 
   app.use('/apis/user', router);
 };

@@ -6,6 +6,8 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 
+var bcrypt = require("bcryptjs");
+
 exports.allAccess = (req, res) => {
     res.status(200).send("Public Content.");
 };
@@ -66,5 +68,71 @@ exports.getUserCompanyDetail = (req, res) => {
             })
             // res.status(200).send(user.tax_id[0]);   ของเก่า
 
+        });
+};
+
+
+
+exports.updateOneCompanyDetail = (req, res) => {
+
+    User.findById(req.userId)
+        .populate({
+            path: 'tax_id',
+            populate: {path: 'company_detail'}
+        })
+        .exec((err, user) => {
+            console.log(user.tax_id[0]._id);
+            Company.findById(user.tax_id[0]._id).exec((err, company) => {
+                company.updateOne({company_name: req.body.companyName}, [],
+                    function (err, doc) {
+                        if (err) {
+                            res.status(500).send({message: err});
+                            return;
+                        }
+                        Company_detail.findById(company.company_detail[0]._id)
+                            .exec((err, company_detail) => {
+                            company_detail.updateOne({
+                                    company_name: req.body.companyName,
+                                    address: req.body.address,
+                                    company_province: req.body.province,
+                                    company_postal: req.body.postal
+                                },
+                                [],
+                                function (err, doc) {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                        return;
+                                    }
+                                    res.status(200).send({status: "updated"})
+                                });
+                        });
+                    })
+            });
+        });
+}
+exports.changePwd = (req, res) => {
+
+        User.findById(req.userId).exec((err, user_callback) => {
+            bcrypt.compare(req.body.oldpassword, user_callback.password, function(err, result) {
+                if (err){
+                    console.log(err);
+                }
+                else {
+                    if (result === true) {
+                        user_callback.updateOne({password: bcrypt.hashSync(req.body.newpassword, 8)},
+                            [],
+                            function (err, doc) {
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                                res.status(200).send({status: "updated"});
+                            });
+                    }
+                    else if (result === false) {
+                        res.status(401).send({status: "Your old password are not correct"});
+                    }
+                }
+            });
         });
 };

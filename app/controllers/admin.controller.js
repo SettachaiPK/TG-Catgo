@@ -3,7 +3,7 @@ const User = db.user;
 const User_detail = db.user_detail
 const Company = db.company;
 const Job = db.job;
-const CompanyDetail = db.company_detail;
+const Company_detail = db.company_detail;
 
 var bcrypt = require("bcryptjs");
 
@@ -25,7 +25,7 @@ exports.getCompanyDetail = (req, res) => {
 }
 
 exports.updateOneCompanyDetail = (req, res) => {
-    CompanyDetail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
+    Company_detail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
         .exec((err, detail) => {
         detail.tax_id[0].updateOne( { company_name: req.body.companyName },
             [],
@@ -102,7 +102,8 @@ exports.adminEditUserInfo = (req, res) => {
     let req_detail = JSON.parse(req.body.detail);
     User.findById(req.params.user_id).populate('role').populate('user_detail')
         .exec((err, user) => {
-            user.updateOne( { username : req.body.username , email : req.body.email ,password: bcrypt.hashSync(req.body.password, 8), avatar: req.body.avatar , status: req.body.status , },
+            user.updateOne( { username : req.body.username, email : req.body.email,
+                    password: bcrypt.hashSync(req.body.password, 8), avatar: req.body.avatar, status: req.body.status , },
                 [],
                 function (err, doc){
                     if (err) {
