@@ -27,11 +27,23 @@ exports.userDetail = (req, res) => {
 }
 
 exports.editPersonalInfo = (req, res) => {
+    let updateBlock = {};
+    if(req.files) {
+        const image_data = req.files.avatar;
+        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+            console.log("wrong type")
+            res.status(415).send({message: "wrong file type"});
+            return;
+        }
+        if(image_data.truncated){
+            res.status(413).send({message: "file too large"});
+            return;
+        }
+        updateBlock['avatar'] = image_data.data.toString('base64');
+    }
     User.findById(req.userId).populate('role').populate('user_detail')
         .exec((err, user) => {
-            user.updateOne( { avatar: req.body.avatar },
-                [],
-                function (err, doc){
+            user.updateOne(  { "$set": updateBlock }, [], function (err, doc){
                     if (err) {
                         res.status(500).send({message: err});
                         return;

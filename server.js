@@ -1,6 +1,8 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const fileUpload = require('express-fileupload');
 const cors = require("cors");
+const morgan = require('morgan');
 const dbConfig = require("./app/config/db.config");
 
 const app = express();
@@ -17,6 +19,16 @@ app.use(cors()); // remove corsOptions to allow all origins
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
+
+// enabled file upload
+app.use(fileUpload({
+  limits: {
+    fileSize: 5000000 //5mb
+  },
+}));
+
+// enabled log
+// app.use(morgan('dev'));
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));

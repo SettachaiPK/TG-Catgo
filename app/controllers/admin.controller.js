@@ -98,14 +98,28 @@ exports.viewEditUserInfo = (req, res) => {
 }
 
 exports.adminEditUserInfo = (req, res) => {
-
+    let updateBlock = {};
+    updateBlock['username'] = req.body.username;
+    updateBlock['email'] = req.body.email;
+    updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
+    updateBlock['status'] = req.body.status;
+    if(req.files) {
+        const image_data = req.files.avatar;
+        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+            console.log("wrong type")
+            res.status(415).send({message: "wrong file type"});
+            return;
+        }
+        if(image_data.truncated){
+            res.status(413).send({message: "file too large"});
+            return;
+        }
+        updateBlock['avatar'] = image_data.data.toString('base64');
+    }
     let req_detail = JSON.parse(req.body.detail);
     User.findById(req.params.user_id).populate('role').populate('user_detail')
         .exec((err, user) => {
-            user.updateOne( { username : req.body.username, email : req.body.email,
-                    password: bcrypt.hashSync(req.body.password, 8), avatar: req.body.avatar, status: req.body.status , },
-                [],
-                function (err, doc){
+            user.updateOne( { "$set": updateBlock }, [], function (err, doc){
                     if (err) {
                         res.status(500).send({message: err});
                         return;
