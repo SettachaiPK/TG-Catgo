@@ -12,6 +12,7 @@ db.company = require("./company/company.model")
 db.company_detail = require("./company/company_detail.model")
 db.job = require("./job/job.model")
 db.province = require("./master-module/province.model")
+db.profile_image = require("./user/profile_image.model")
 
 db.ROLES = ["tg-admin", "admin", "freight-forwarder", "driver"];
 

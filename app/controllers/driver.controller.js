@@ -3,6 +3,7 @@ const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
+const Profile_image = db.profile_image;
 const Company = db.company;
 const Role = db.role;
 const Job = db.job;
@@ -30,7 +31,7 @@ exports.driverDetail = (req, res) => {
         .exec((err, user) => {
             Role.findOne({'name': 'driver'}).exec((err, driver) => {
                 User.findOne({'_id': req.params.driver_id, 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
-                    .populate("user_detail")
+                    .populate("user_detail").populate("avatar", 'value')
                     .exec((err, callback) => {
                         res.status(200).send(callback)
                     });
@@ -39,13 +40,25 @@ exports.driverDetail = (req, res) => {
 }
 
 exports.editDriverInfo = (req, res) => {
-
+    let updateBlock = {};
+    updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
+    updateBlock['status'] = req.body.status;
+    if(req.files) {
+        const image_data = req.files.avatar;
+        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+            res.status(415).send({message: "wrong file type"});
+            return;
+        }
+        if(image_data.truncated){
+            res.status(413).send({message: "file too large"});
+            return;
+        }
+        updateBlock['avatar'] = image_data.data.toString('base64');
+    }
     let req_detail = JSON.parse(req.body.detail);
     User.findById(req.params.driver_id).populate('role').populate('user_detail')
         .exec((err, user) => {
-            user.updateOne( { password: bcrypt.hashSync(req.body.password, 8), avatar: req.body.avatar , status: req.body.status , },
-                [],
-                function (err, doc){
+            user.updateOne( { "$set": updateBlock }, [], function (err, doc){
                     if (err) {
                         res.status(500).send({message: err});
                         return;
@@ -86,7 +99,6 @@ exports.createDriver = (req, res) => {
                 password: bcrypt.hashSync(req.body.password, 8),
                 email: req.body.email,
                 status: true,
-                avatar: "/assets/img/misc/profile.jpg",
             });
 
             const user_detail = new User_detail({ prefix: req_detail.prefix,
@@ -102,6 +114,13 @@ exports.createDriver = (req, res) => {
                     res.status(500).send({message: err});
                     return;
                 }
+                Profile_image.find({name: "default"}, (err, profile_image) => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    user.avatar = profile_image.map(name => name._id);
+                });
                 user.tax_id.push(userFF.tax_id[0]._id)
                 Role.find(
 
@@ -157,9 +176,18 @@ exports.createDriver = (req, res) => {
 };
 
 exports.driverJobOverview = (req,res) => {
-    Job.find({'driver': req.userId}).exec((err, jobForDriver) => {
-        res.status(200).send(jobForDriver)
-    })
+    let options = {
+        populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
+        page:req.query.page,
+        limit:req.query.limit,
+    };
+    Job.paginate({'driver': req.userId}, options, function (err, result) {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
+        res.status(200).send(result)
+    });
 }
 
 

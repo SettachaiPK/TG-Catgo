@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Job = mongoose.model(
     "Job",
@@ -31,9 +32,8 @@ const Job = mongoose.model(
                     type: mongoose.Schema.Types.ObjectId,
                     ref: "Company"
             }],
-    }, {timestamps: true})
+    }, {timestamps: true}).plugin(mongoosePaginate)
 );
-
 module.exports = Job;
 
 

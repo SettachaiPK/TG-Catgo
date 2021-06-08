@@ -7,12 +7,20 @@ const Company = db.company;
 const Job = db.job;
 
 exports.overviewAllJob = (req, res) => {
+    let options = {
+        populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
+        page:req.query.page,
+        limit:req.query.limit,
+    };
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, user) => {
-
-            Job.find({'company': user.tax_id[0]._id}).exec((err, callback) => {
-                res.status(200).send(callback)
+            Job.paginate({'company': user.tax_id[0]._id}, options, function (err, result) {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                res.status(200).send(result)
             });
         });
 }
@@ -47,9 +55,14 @@ exports.createJob = (req, res) => {
 
 
 exports.selectDriver = (req, res) => {
+
     Job.findOne({'_id': req.params.job_id, 'status': 2})
         .populate("driver", '-password')
         .exec((err, job_callback) => {
+            if (job_callback === null) {
+                res.status(404).send({message: "no job found."});
+                return;
+            }
             if (err) {
                 res.status(500).send({message: err});
                 return;

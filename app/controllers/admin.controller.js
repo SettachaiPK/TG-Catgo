@@ -3,7 +3,8 @@ const User = db.user;
 const User_detail = db.user_detail
 const Company = db.company;
 const Job = db.job;
-const CompanyDetail = db.company_detail;
+const Company_detail = db.company_detail;
+const Profile_image = db.profile_image;
 
 var bcrypt = require("bcryptjs");
 
@@ -25,7 +26,7 @@ exports.getCompanyDetail = (req, res) => {
 }
 
 exports.updateOneCompanyDetail = (req, res) => {
-    CompanyDetail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
+    Company_detail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
         .exec((err, detail) => {
         detail.tax_id[0].updateOne( { company_name: req.body.companyName },
             [],
@@ -98,13 +99,61 @@ exports.viewEditUserInfo = (req, res) => {
 }
 
 exports.adminEditUserInfo = (req, res) => {
-
+    let updateBlock = {};
+    updateBlock['username'] = req.body.username;
+    updateBlock['email'] = req.body.email;
+    updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
+    updateBlock['status'] = req.body.status;
+    let image_data = {};
+    if(req.files) {
+        image_data = req.files.avatar;
+        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+            res.status(415).send({message: "wrong file type"});
+            return;
+        }
+        if(image_data.truncated){
+            res.status(413).send({message: "file too large"});
+            return;
+        }
+    }
     let req_detail = JSON.parse(req.body.detail);
-    User.findById(req.params.user_id).populate('role').populate('user_detail')
+    User.findById(req.params.user_id).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
-            user.updateOne( { username : req.body.username , email : req.body.email ,password: bcrypt.hashSync(req.body.password, 8), avatar: req.body.avatar , status: req.body.status , },
-                [],
-                function (err, doc){
+            if (req.files) {
+                Profile_image.find({name: "default"}, ((err1, docs) => {
+                    // user doesn't have profile image
+                    if (user.avatar[0]._id.equals(docs[0]._id)) {
+                        new Profile_image({
+                            name: user._id,
+                            value: image_data.data.toString('base64')
+                        }).save((err, result) => {
+                            if (err) {
+                                res.status(500).send({message: err});
+                                return;
+                            }
+                            user.updateOne({'avatar': result}, [],
+                                function (err, doc) {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                        return;
+                                    }
+                                });
+                        });
+                    }
+                    // user has profile image
+                    else {
+                        user.avatar[0].updateOne({value: image_data.data.toString('base64')},
+                            [],
+                            function (err, doc) {
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                            })
+                    }
+                }));
+            }
+            user.updateOne( { "$set": updateBlock }, [], function (err, doc){
                     if (err) {
                         res.status(500).send({message: err});
                         return;
@@ -128,29 +177,3 @@ exports.adminEditUserInfo = (req, res) => {
                 });
         });
 }
-// async function testfunc(){
-//     var testOutput = await [];
-//
-//     let a = await Role.findOne({'name': "driver"}).exec((err, callback) => {
-//         Company.find().exec((err, Allcompany) => {
-//             for (var i = 0; i < Allcompany.length; i++) {
-//                 User.find({ 'tax_id': Allcompany[i]._id , 'role': callback._id })
-//                     .populate("driver", '-password')
-//                     .exec((err, companies_driver) => {
-//                         if (err) {
-//                             return;
-//                         }
-
-//                         console.log(companies_driver.length);
-//                         testOutput.push({companies_driver,
-//                             count: companies_driver.length
-//                         });
-//                         console.log(testOutput)
-//                     });
-//             };
-//             res.status(200).send('result :' + testOutput);
-//         });
-//     });
-// }
-//
-// // count all driver in company
