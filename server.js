@@ -2,7 +2,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const fileUpload = require('express-fileupload');
 const cors = require("cors");
-const morgan = require('morgan');
+const path = require('path');
+const fs = require("fs");
 const dbConfig = require("./app/config/db.config");
 
 const app = express();
@@ -11,8 +12,11 @@ const app = express();
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
-  origin: "http://localhost:8080"
+    origin: "http://localhost:8080"
 };
+
+// define root path
+const root = path.dirname(require.main.filename);
 
 // app.use(cors(corsOptions));
 app.use(cors()); // remove corsOptions to allow all origins
@@ -22,20 +26,17 @@ app.use(bodyParser.json());
 
 // enabled file upload
 app.use(fileUpload({
-  limits: {
-    fileSize: 5000000 //5mb
-  },
+    limits: {
+        fileSize: 1000000 //1mb
+    },
 }));
 
-// enabled log
-// app.use(morgan('dev'));
-
 // parse requests of content-type - application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
 
 // simple route
 app.get("/", (req, res) => {
-  res.json({ message: "Welcome to TG-Cargo application." });
+    res.json({message: "Welcome to TG-Cargo application."});
 });
 
 // routes
@@ -50,71 +51,88 @@ require("./app/routes/master-module.routes")(app);
 // set port, listen for requests
 const PORT = process.env.PORT || 8081;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
+    console.log(`Server is running on port ${PORT}.`);
 });
 
 // connect to database
 const db = require("./app/models");
 const Role = db.role;
+const Profile_image = db.profile_image;
 
 db.mongoose
     .connect('mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Automated-Test?retryWrites=true&w=majority', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
+        useNewUrlParser: true,
+        useUnifiedTopology: true
     })
     .then(() => {
-      console.log("Successfully connect to MongoDB.");
-      initial();
+        console.log("Successfully connect to MongoDB.");
+        initial();
     })
     .catch(err => {
-      console.error("Connection error", err);
-      process.exit();
+        console.error("Connection error", err);
+        process.exit();
     });
 
 function initial() {
-  Role.estimatedDocumentCount((err, count) => {
-    if (!err && count === 0) {
-
-      new Role({
-        name: "tg-admin"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
+    Profile_image.estimatedDocumentCount((err, count) => {
+        if (!err && count === 0) {
+            fs.readFile(root + '/default_image.txt', 'utf8', function(err, data) {
+                if (err) throw err;
+                new Profile_image({
+                    name: "default",
+                    value: data
+                }).save(err => {
+                    if (err) {
+                        console.log("error", err);
+                    }
+                    console.log("added default profile image to default collection");
+                });
+            });
         }
+    });
+    Role.estimatedDocumentCount((err, count) => {
+        if (!err && count === 0) {
 
-        console.log("added 'tg-admin' to roles collection");
-      });
+            new Role({
+                name: "tg-admin"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
 
-      new Role({
-        name: "admin"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
+                console.log("added 'tg-admin' to roles collection");
+            });
+
+            new Role({
+                name: "admin"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'admin' to roles collection");
+            });
+
+            new Role({
+                name: "freight-forwarder"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'freight-forwarder' to roles collection");
+            });
+
+            new Role({
+                name: "driver"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'driver' to roles collection");
+            });
+
         }
-
-        console.log("added 'admin' to roles collection");
-      });
-
-      new Role({
-        name: "freight-forwarder"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-
-        console.log("added 'freight-forwarder' to roles collection");
-      });
-
-      new Role({
-        name: "driver"
-      }).save(err => {
-        if (err) {
-          console.log("error", err);
-        }
-
-        console.log("added 'driver' to roles collection");
-      });
-
-    }
-  });
+    });
 }

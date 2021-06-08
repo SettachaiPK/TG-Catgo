@@ -5,6 +5,7 @@ const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
+const Profile_image = db.profile_image;
 
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
@@ -16,7 +17,7 @@ exports.getcompanydetail_ifexist = (req, res) => {
                 res.status(500).send({message: err});
                 return;
             }
-            if (company_detail.length == 0) {
+            if (company_detail.length === 0) {
                 res.send({company_exist: false});
                 return
             }
@@ -45,7 +46,7 @@ exports.checktaxid = (req, res) => {
             tax_id: {$in: req.body.taxid}
         },
         (err, taxid) => {
-            if (taxid.length == 0) {
+            if (taxid.length === 0) {
                 const company = new Company({
                     tax_id: req.body.taxid,
                     company_name: req.body.name,
@@ -94,7 +95,6 @@ exports.signup = (req, res) => {
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
         email: req.body.email,
-        avatar: "/assets/img/misc/profile.jpg",
         status: true,
     });
 
@@ -111,6 +111,13 @@ exports.signup = (req, res) => {
             res.status(500).send({message: err});
             return;
         }
+        Profile_image.find({name: "default"}, (err, profile_image) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
+            user.avatar = profile_image.map(name => name._id);
+        });
         Company.find({tax_id: {$in: req.body.taxid}}, (err, tax_id_callback) => {
                 if (err) {
                     res.status(500).send({message: err});
@@ -216,15 +223,15 @@ exports.signin = (req, res) => {
         User.findOne({
             username: req.body.username
         })
-            .populate("role", "-__v")
-            .exec((err, roles) => {
+            .populate("role").populate("avatar")
+            .exec((err, user_detail) => {
                 res.status(200).send({
                     id: user._id,
                     username: user.username,
                     accessToken: token,
                     email: user.email,
-                    role: roles.role[0].name,
-                    avatar: user.avatar,
+                    role: user_detail.role[0].name,
+                    avatar: user_detail.avatar[0].value,
                     created_at: user.createdAt,
                     updated_at: user.updatedAt
             });

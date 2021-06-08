@@ -5,6 +5,7 @@ const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
+const Profile_image = db.profile_image;
 
 var bcrypt = require("bcryptjs");
 
@@ -14,24 +15,23 @@ exports.allAccess = (req, res) => {
 
 exports.userDetail = (req, res) => {
     User.findById(req.userId)
-        .populate('role').populate('user_detail')
+        .populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             res.status(200).send({
                 prefix: user.user_detail[0].prefix,
                 firstname: user.user_detail[0].firstname,
                 lastname: user.user_detail[0].lastname,
                 phone: user.user_detail[0].phone,
-                avatar: user.avatar
+                avatar: user.avatar[0].value
             });
         });
 }
 
 exports.editPersonalInfo = (req, res) => {
-    let updateBlock = {};
+    let image_data = {};
     if(req.files) {
-        const image_data = req.files.avatar;
+        image_data = req.files.avatar;
         if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
-            console.log("wrong type")
             res.status(415).send({message: "wrong file type"});
             return;
         }
@@ -39,27 +39,55 @@ exports.editPersonalInfo = (req, res) => {
             res.status(413).send({message: "file too large"});
             return;
         }
-        updateBlock['avatar'] = image_data.data.toString('base64');
     }
-    User.findById(req.userId).populate('role').populate('user_detail')
+    User.findById(req.userId).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
-            user.updateOne(  { "$set": updateBlock }, [], function (err, doc){
-                    if (err) {
-                        res.status(500).send({message: err});
-                        return;
-                    }
-                    user.user_detail[0].updateOne( { prefix: req.body.prefix,
-                            firstname: req.body.firstname,
-                            lastname: req.body.lastname,
-                            phone: req.body.phone },
+            console.log(user.avatar[0]._id);
+            Profile_image.find( {name: "default"},((err1, docs) => {
+                console.log(docs[0]._id);
+                // user doesn't have profile image
+                if (user.avatar[0]._id.equals(docs[0]._id)) {
+                    new Profile_image({
+                        name: user._id,
+                        value: image_data.data.toString('base64')
+                    }).save((err,result) => {
+                        if (err) {
+                            res.status(500).send({message: err});
+                            return;
+                        }
+                        user.updateOne( {'avatar': result }, [],
+                            function (err, doc) {
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                            });
+                    });
+                }
+                // user has profile image
+                else {
+                    console.log(user.avatar[0]);
+                    user.avatar[0].updateOne( {value: image_data.data.toString('base64')},
                         [],
                         function (err, doc){
                             if (err) {
                                 res.status(500).send({message: err});
                                 return;
                             }
-                            res.status(200).send({message: "updated"})
-                        });
+                        })
+                }
+            }));
+            user.user_detail[0].updateOne( { prefix: req.body.prefix,
+                    firstname: req.body.firstname,
+                    lastname: req.body.lastname,
+                    phone: req.body.phone },
+                [],
+                function (err, doc){
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    res.status(200).send({message: "updated"})
                 });
         });
 }
@@ -93,7 +121,6 @@ exports.updateOneCompanyDetail = (req, res) => {
             populate: {path: 'company_detail'}
         })
         .exec((err, user) => {
-            console.log(user.tax_id[0]._id);
             Company.findById(user.tax_id[0]._id).exec((err, company) => {
                 company.updateOne({company_name: req.body.companyName}, [],
                     function (err, doc) {
@@ -127,7 +154,7 @@ exports.changePwd = (req, res) => {
         User.findById(req.userId).exec((err, user_callback) => {
             bcrypt.compare(req.body.oldpassword, user_callback.password, function(err, result) {
                 if (err){
-                    console.log(err);
+                    res.status(500).send({message: err});
                 }
                 else {
                     if (result === true) {

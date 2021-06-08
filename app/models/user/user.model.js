@@ -6,7 +6,10 @@ const User = mongoose.model(
     username: String,
     password: String,
       email: String,
-      avatar: String,
+      avatar: [{
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Profile_image"
+      }],
       created_at: String,
       updated_at: String,
       status: Boolean,

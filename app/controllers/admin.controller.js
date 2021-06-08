@@ -106,7 +106,6 @@ exports.adminEditUserInfo = (req, res) => {
     if(req.files) {
         const image_data = req.files.avatar;
         if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
-            console.log("wrong type")
             res.status(415).send({message: "wrong file type"});
             return;
         }

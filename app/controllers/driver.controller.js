@@ -3,6 +3,7 @@ const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
+const Profile_image = db.profile_image;
 const Company = db.company;
 const Role = db.role;
 const Job = db.job;
@@ -30,7 +31,7 @@ exports.driverDetail = (req, res) => {
         .exec((err, user) => {
             Role.findOne({'name': 'driver'}).exec((err, driver) => {
                 User.findOne({'_id': req.params.driver_id, 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
-                    .populate("user_detail")
+                    .populate("user_detail").populate("avatar", 'value')
                     .exec((err, callback) => {
                         res.status(200).send(callback)
                     });
@@ -45,7 +46,6 @@ exports.editDriverInfo = (req, res) => {
     if(req.files) {
         const image_data = req.files.avatar;
         if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
-            console.log("wrong type")
             res.status(415).send({message: "wrong file type"});
             return;
         }
@@ -99,7 +99,6 @@ exports.createDriver = (req, res) => {
                 password: bcrypt.hashSync(req.body.password, 8),
                 email: req.body.email,
                 status: true,
-                avatar: "/assets/img/misc/profile.jpg",
             });
 
             const user_detail = new User_detail({ prefix: req_detail.prefix,
@@ -115,6 +114,13 @@ exports.createDriver = (req, res) => {
                     res.status(500).send({message: err});
                     return;
                 }
+                Profile_image.find({name: "default"}, (err, profile_image) => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    user.avatar = profile_image.map(name => name._id);
+                });
                 user.tax_id.push(userFF.tax_id[0]._id)
                 Role.find(
 
