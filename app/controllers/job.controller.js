@@ -70,7 +70,8 @@ exports.selectDriver = (req, res) => {
             if (job_callback.driver.length > 0) {
                 job_callback.driver.pop()
             }
-            job_callback.driver.push(req.body.driver)
+            job_callback.driver.push(req.body.driver);
+            job_callback.driverAssigner.push(req.userId);
             job_callback.status = 3;
             job_callback.save((err, job) => {
                 if (err) {

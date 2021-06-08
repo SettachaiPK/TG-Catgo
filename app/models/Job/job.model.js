@@ -22,16 +22,21 @@ const Job = mongoose.model(
         truckNumber: String,
         rating: String,
         comment: String,
-        driver:
-            [{
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "User"
-            }],
-            company:
-            [{
+        driverAssigner:
+                [{
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: "Company"
-            }],
+                    ref: "User"
+                }],
+        driver:
+                [{
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User"
+                }],
+        company:
+                [{
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "Company"
+                }],
     }, {timestamps: true}).plugin(mongoosePaginate)
 );
 module.exports = Job;

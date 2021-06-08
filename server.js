@@ -53,9 +53,27 @@ require("./app/routes/master-module.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8081;
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
+
+//socket.io instantiation
+const io = require("socket.io")(server, {
+    cors: {
+      origin: '*',
+    }
+  });
+
+//listen on every connection
+io.on('connection', (socket) => {
+    console.log(socket.id)
+    console.log('New user connected')
+
+    socket.emit('connected', { hello: 'message "HI" ' });
+    socket.on('test_send', (data) => {
+        console.log(data);
+    })
+})
 
 // connect to database
 const db = require("./app/models");
