@@ -42,41 +42,40 @@ exports.editPersonalInfo = (req, res) => {
     }
     User.findById(req.userId).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
-            console.log(user.avatar[0]._id);
-            Profile_image.find( {name: "default"},((err1, docs) => {
-                console.log(docs[0]._id);
-                // user doesn't have profile image
-                if (user.avatar[0]._id.equals(docs[0]._id)) {
-                    new Profile_image({
-                        name: user._id,
-                        value: image_data.data.toString('base64')
-                    }).save((err,result) => {
-                        if (err) {
-                            res.status(500).send({message: err});
-                            return;
-                        }
-                        user.updateOne( {'avatar': result }, [],
+            if(req.files) {
+                Profile_image.find({name: "default"}, ((err1, docs) => {
+                    // user doesn't have profile image
+                    if (user.avatar[0]._id.equals(docs[0]._id)) {
+                        new Profile_image({
+                            name: user._id,
+                            value: image_data.data.toString('base64')
+                        }).save((err, result) => {
+                            if (err) {
+                                res.status(500).send({message: err});
+                                return;
+                            }
+                            user.updateOne({'avatar': result}, [],
+                                function (err, doc) {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                        return;
+                                    }
+                                });
+                        });
+                    }
+                    // user has profile image
+                    else {
+                        user.avatar[0].updateOne({value: image_data.data.toString('base64')},
+                            [],
                             function (err, doc) {
                                 if (err) {
                                     res.status(500).send({message: err});
                                     return;
                                 }
-                            });
-                    });
-                }
-                // user has profile image
-                else {
-                    console.log(user.avatar[0]);
-                    user.avatar[0].updateOne( {value: image_data.data.toString('base64')},
-                        [],
-                        function (err, doc){
-                            if (err) {
-                                res.status(500).send({message: err});
-                                return;
-                            }
-                        })
-                }
-            }));
+                            })
+                    }
+                }));
+            }
             user.user_detail[0].updateOne( { prefix: req.body.prefix,
                     firstname: req.body.firstname,
                     lastname: req.body.lastname,

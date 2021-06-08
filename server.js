@@ -8,6 +8,9 @@ const dbConfig = require("./app/config/db.config");
 
 const app = express();
 
+//enable dotenv
+require('dotenv').config()
+
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
@@ -60,7 +63,7 @@ const Role = db.role;
 const Profile_image = db.profile_image;
 
 db.mongoose
-    .connect('mongodb+srv://admin:qwertyuiopQWERTYUIOP123@tg-cargo.lcjtd.mongodb.net/Automated-Test?retryWrites=true&w=majority', {
+    .connect(process.env.DB, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
