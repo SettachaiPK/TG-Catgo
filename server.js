@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload');
 const cors = require("cors");
 const path = require('path');
@@ -26,6 +27,7 @@ app.use(cors()); // remove corsOptions to allow all origins
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // enabled file upload
 app.use(fileUpload({

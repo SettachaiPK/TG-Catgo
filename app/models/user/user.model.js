@@ -30,7 +30,8 @@ const User = mongoose.model(
         type: mongoose.Schema.Types.ObjectId,
         ref: "User_detail"
         }]
-,
+    ,
+      refresh_token: String,
   }, { timestamps: true })
 );
 

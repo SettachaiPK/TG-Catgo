@@ -7,17 +7,52 @@ const User = db.user;
  * Then return the confirm message.
  */
 verifyToken = (req, res, next) => {
+    let refreshToken = req.cookies.refreshToken;
     let token = req.headers["x-access-token"];
     if (!token) {
         return res.status(403).send({message: "No token provided!"});
     }
-
     jwt.verify(token, config.secret, (err, decoded) => {
-        if (err) {
-            return res.status(401).send({message: "Unauthorized!"});
+        if(err) {
+            if (err.message ==='jwt expired') {
+                jwt.verify(refreshToken, config.refreshTokenSecret, (err, second_decoded) => {
+                    if (err) {
+                        return res.status(401).send({message: err});
+                    }
+                    User.findById(second_decoded.id).exec(((err, user) => {
+                        if (refreshToken === user.refresh_token) {
+                            const token = jwt.sign({id: user.id}, config.secret, {
+                                expiresIn: 300 // 5 minutes
+                            });
+                            const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
+                                expiresIn: 86400 // 24 hours
+                            });
+                            user.updateOne({refresh_token: refreshToken},
+                                [],
+                                function (err, doc) {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                        return;
+                                    }
+                                    res.cookie('refreshToken', refreshToken);
+                                    req.userId = second_decoded.id;
+                                    req.accessToken = token;
+                                    next();
+                                });
+                        } else {
+                            return res.status(401).send(err);
+                        }
+                    }));
+                });
+            }
+            else {
+                return res.status(401).send(err);
+            }
         }
-        req.userId = decoded.id;
-        next();
+        else {
+            req.userId = decoded.id;
+            next();
+        }
     });
 };
 

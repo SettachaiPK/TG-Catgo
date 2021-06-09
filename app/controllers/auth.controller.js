@@ -191,53 +191,64 @@ exports.signup = (req, res) => {
  * @returns boolean
  * @see
  */
+
+const tokenList = {}
+
 exports.signin = (req, res) => {
     User.findOne({
         username: req.body.username
     })
-    .exec((err, user) => {
-        if (err) {
-            res.status(500).send({message: err});
-            return;
-        }
+        .exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
 
-        if (!user) {
-            return res.status(404).send({message: "User Not found."});
-        }
+            if (!user) {
+                return res.status(404).send({message: "User Not found."});
+            }
 
-        var passwordIsValid = bcrypt.compareSync(
-            req.body.password,
-            user.password
-        );
+            var passwordIsValid = bcrypt.compareSync(
+                req.body.password,
+                user.password
+            );
 
-        if (!passwordIsValid) {
-            return res.status(401).send({
-                accessToken: null,
-                message: "Invalid Password!"
+            if (!passwordIsValid) {
+                return res.status(401).send({
+                    accessToken: null,
+                    message: "Invalid Password!"
+                });
+            }
+            const token = jwt.sign({id: user.id}, config.secret, {
+                expiresIn: 300 // 5 minutes
             });
-        }
-
-        var token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400000 // 24 hours
-        });
-        User.findOne({
-            username: req.body.username
-        })
-            .populate("role").populate("avatar")
-            .exec((err, user_detail) => {
-                res.status(200).send({
-                    id: user._id,
-                    username: user.username,
-                    accessToken: token,
-                    email: user.email,
-                    role: user_detail.role[0].name,
-                    avatar: user_detail.avatar[0].value,
-                    created_at: user.createdAt,
-                    updated_at: user.updatedAt
+            const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
+                expiresIn: 86400 // 24 hours
+            });
+            User.findById(user._id).populate("role").populate("avatar")
+                .exec((err, user_callback) => {
+                user_callback.updateOne({refresh_token: refreshToken},
+                    [],
+                    function (err, doc) {
+                        if (err) {
+                            res.status(500).send({message: err});
+                            return;
+                        }
+                        res.cookie('refreshToken', refreshToken);
+                        res.status(200).send({
+                            id: user._id,
+                            username: user.username,
+                            accessToken: token,
+                            email: user.email,
+                            role: user_callback.role[0].name,
+                            avatar: user_callback.avatar[0].value,
+                            created_at: user.createdAt,
+                            updated_at: user.updatedAt,
+                        });
+                    });
             });
         });
-    });
-};
+}
 
 exports.generateForgotPwdLink = (req, res) => {
     User.findOne({

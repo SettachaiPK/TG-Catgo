@@ -11,6 +11,7 @@ exports.overviewAllJob = (req, res) => {
         populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
         page:req.query.page,
         limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
     };
     User.findById(req.userId)
         .populate('tax_id')
