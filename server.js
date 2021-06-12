@@ -7,6 +7,13 @@ const path = require('path');
 const fs = require("fs");
 const dbConfig = require("./app/config/db.config");
 
+const db = require("./app/models");
+const { user } = require("./app/models");
+const Role = db.role;
+const Profile_image = db.profile_image;
+const Chat = db.chat;
+const User = db.user;
+const Comment = db.comment;
 const app = express();
 
 //enable dotenv
@@ -53,6 +60,7 @@ require("./app/routes/driver.routes")(app);
 require("./app/routes/tg-admin.routes")(app);
 require("./app/routes/master-module.routes")(app);
 require("./app/routes/public.routes")(app);
+require("./app/routes/chat.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8081;
@@ -69,20 +77,38 @@ const io = require("socket.io")(server, {
 
 //listen on every connection
 io.on('connection', (socket) => {
-    console.log(socket.id)
-    console.log('New user connected')
+    socket.on('join', (data) => {
+        socket.join(data.job_id);
+    });
+    socket.on('disconnect', () => {
+        console.log("A user disconnected");
+    });
 
-    socket.emit('connected', { hello: 'message "HI" ' });
-    socket.on('test_send', (data) => {
+    socket.on('send-message', (data) => {
         console.log(data);
+        User.findById(data.user_id)
+        .populate('avatar')
+        .exec((err, result) => {
+            socket.to(data.job_id).emit('recive-message', 
+            { 
+                user_id: data.user_id,
+                message: data.message,
+                job_id: data.job_id,
+                createAt: data.createAt,
+                avatar: result.avatar[0].value,
+                username: result.username
+            }); 
+            const chat = new Chat({
+                message: data.message,
+                });    
+            chat.user.push(data.user_id);
+            chat.job.push(data.job_id);
+            chat.save();
+        });
     })
 })
 
 // connect to database
-const db = require("./app/models");
-const Role = db.role;
-const Profile_image = db.profile_image;
-
 db.mongoose
     .connect(process.env.DB, {
         useNewUrlParser: true,

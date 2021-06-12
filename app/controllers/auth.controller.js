@@ -6,12 +6,13 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
+const Log = db.log;
 
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 exports.getcompanydetail_ifexist = (req, res) => {
-    Company.find({ tax_id: {$in: req.body.taxid} }).populate('company_detail')
+    Company.find({ tax_id: {$in: req.params.taxid} }).populate('company_detail')
         .exec((err, company_detail) => {
             if (err) {
                 res.status(500).send({message: err});
@@ -103,8 +104,6 @@ exports.signup = (req, res) => {
         prefix: req.body.prefix,
         firstname: req.body.firstname,
         lastname: req.body.lastname,
-
-
     });
     user.save((err, user) => {
         if (err) {
@@ -220,7 +219,7 @@ exports.signin = (req, res) => {
                 });
             }
             const token = jwt.sign({id: user.id}, config.secret, {
-                expiresIn: 300 // 5 minutes
+                expiresIn: 86400 // 300 // 5 minutes
             });
             const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
                 expiresIn: 86400 // 24 hours
@@ -308,5 +307,19 @@ exports.resetPwd = (req, res) => {
         return res.status(401).send({ message: "Token expired!" })
     }
 };
+
+exports.log = (req, res) => {
+    const log = new Log({
+        action: req.body.log
+    });
+    log.user.push(req.userId);
+    log.save(err => {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
+        res.status(200).send({message: 'logged'});
+    });
+}
 
 

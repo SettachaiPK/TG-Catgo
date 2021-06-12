@@ -8,7 +8,6 @@ const Company = db.company;
 const Role = db.role;
 const Job = db.job;
 
-var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 exports.overviewAllDriver = (req, res) => {

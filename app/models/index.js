@@ -14,6 +14,8 @@ db.job = require("./job/job.model");
 db.province = require("./master-module/province.model");
 db.profile_image = require("./user/profile_image.model");
 db.comment = require("./user/comment.model");
+db.chat = require("./chat/chat.model");
+db.log = require("./log/log.model");
 
 db.ROLES = ["tg-admin", "admin", "freight-forwarder", "driver"];
 
