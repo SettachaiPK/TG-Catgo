@@ -52,6 +52,7 @@ require("./app/routes/ff.routes")(app);
 require("./app/routes/driver.routes")(app);
 require("./app/routes/tg-admin.routes")(app);
 require("./app/routes/master-module.routes")(app);
+require("./app/routes/public.routes")(app);
 
 // set port, listen for requests
 const PORT = process.env.PORT || 8081;
@@ -124,6 +125,46 @@ function initial() {
                 }
 
                 console.log("added 'tg-admin' to roles collection");
+            });
+
+            new Role({
+                name: "tg-admin-office"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'tg-admin-office' to roles collection");
+            });
+
+            new Role({
+                name: "tg-admin-finance"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'tg-admin-finance' to roles collection");
+            });
+
+            new Role({
+                name: "tg-admin-package"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'tg-admin-package' to roles collection");
+            });
+
+            new Role({
+                name: "tg-admin-deliver"
+            }).save(err => {
+                if (err) {
+                    console.log("error", err);
+                }
+
+                console.log("added 'tg-admin-deliver)' to roles collection");
             });
 
             new Role({

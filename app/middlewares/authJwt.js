@@ -17,7 +17,7 @@ verifyToken = (req, res, next) => {
             if (err.message ==='jwt expired') {
                 jwt.verify(refreshToken, config.refreshTokenSecret, (err, second_decoded) => {
                     if (err) {
-                        return res.status(401).send({message: err});
+                        return res.status(401).send({message: "refresh token expired"});
                     }
                     User.findById(second_decoded.id).exec(((err, user) => {
                         if (refreshToken === user.refresh_token) {
@@ -40,7 +40,7 @@ verifyToken = (req, res, next) => {
                                     next();
                                 });
                         } else {
-                            return res.status(401).send(err);
+                            return res.status(401).send({message: "refresh token expired"});
                         }
                     }));
                 });
@@ -86,6 +86,74 @@ isTgAdmin = (req, res, next) => {
                     return;
                 }
                 res.status(403).send({message: "Require tg-admin Role!"});
+
+            }
+        );
+};
+
+isTgAdminOffice = (req, res, next) => {
+    User.findById(req.userId).populate("role", "-__v")
+        .exec((err, user) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                if (user.role[0].name === "tg-admin-office" || user.role[0].name === "admin") {
+                    next();
+                    return;
+                }
+                res.status(403).send({message: "Require tg-admin-office Role!"});
+
+            }
+        );
+};
+
+isTgAdminFinance = (req, res, next) => {
+    User.findById(req.userId).populate("role", "-__v")
+        .exec((err, user) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                if (user.role[0].name === "tg-admin-finance" || user.role[0].name === "admin") {
+                    next();
+                    return;
+                }
+                res.status(403).send({message: "Require tg-admin-finance Role!"});
+
+            }
+        );
+};
+
+isTgAdminPackage = (req, res, next) => {
+    User.findById(req.userId).populate("role", "-__v")
+        .exec((err, user) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                if (user.role[0].name === "tg-admin-package" || user.role[0].name === "admin") {
+                    next();
+                    return;
+                }
+                res.status(403).send({message: "Require tg-admin-package Role!"});
+
+            }
+        );
+};
+
+isTgAdminDeliver = (req, res, next) => {
+    User.findById(req.userId).populate("role", "-__v")
+        .exec((err, user) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
+                if (user.role[0].name === "tg-admin-deliver)" || user.role[0].name === "admin") {
+                    next();
+                    return;
+                }
+                res.status(403).send({message: "Require tg-admin-deliver Role!"});
 
             }
         );
@@ -146,6 +214,10 @@ isDriver = (req, res, next) => {
 const authJwt = {
     verifyToken,
     isTgAdmin,
+    isTgAdminOffice,
+    isTgAdminFinance,
+    isTgAdminPackage,
+    isTgAdminDeliver,
     isAdmin,
     isFreightForwarder,
     isDriver,
