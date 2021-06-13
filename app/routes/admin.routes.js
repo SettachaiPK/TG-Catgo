@@ -54,5 +54,11 @@ module.exports = app => {
         adminController.adminEditUserInfo
     );
 
+    router.get(
+        "/overview",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.allCompaniesOverviewJobStatusCount
+    )
+
     app.use('/apis/admin', router);
 };

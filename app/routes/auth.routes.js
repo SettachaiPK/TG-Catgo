@@ -1,6 +1,6 @@
 module.exports = function(app) {
   var router = require("express").Router();
-  const { verifySignUp } = require("../middlewares");
+  const { verifySignUp, authJwt } = require("../middlewares");
   const authController = require("../controllers/auth.controller");
 
   app.use(function(req, res, next) {
@@ -11,7 +11,7 @@ module.exports = function(app) {
     next();
   });
 
-  router.post("/companydetail_ifexist", authController.getcompanydetail_ifexist);
+  router.get("/companydetail_ifexist/:taxid", authController.getcompanydetail_ifexist);
 
   router.post("/checktaxid", authController.checktaxid);
 
@@ -38,6 +38,9 @@ module.exports = function(app) {
   router.post("/reset",
       authController.resetPwd
   );
+
+  router.post("/log",[authJwt.verifyToken],
+      authController.log)
 
   app.use('/apis/auth', router);
 };

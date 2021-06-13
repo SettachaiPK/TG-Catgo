@@ -16,6 +16,7 @@ const User_detail = mongoose.model(
         address: String,
         province: String,
         zipcode: String,
+        avg_rating: Number,
     }, { timestamps: true })
 
 );

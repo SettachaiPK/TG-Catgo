@@ -13,6 +13,12 @@ module.exports = app => {
     });
 
     router.get(
+        "/jrq/overview",
+        [authJwt.verifyToken, authJwt.isFreightForwarder],
+        jobController.overviewJobStatusCount
+    );
+
+    router.get(
         "/jrq",
         [authJwt.verifyToken, authJwt.isFreightForwarder],
         jobController.overviewAllJob
@@ -58,6 +64,12 @@ module.exports = app => {
         "/tdv/create",
         [verifySignUp.checkDuplicateUsernameOrEmail, authJwt.verifyToken, authJwt.isFreightForwarder],
         driverController.createDriver
+    );
+
+    router.get(
+        "/tdv/:driver_id/all_comment",
+        [authJwt.verifyToken, authJwt.isFreightForwarder],
+        jobController.callCommentDriver
     );
 
     app.use('/apis/ff', router);

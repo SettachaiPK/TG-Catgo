@@ -8,7 +8,6 @@ const Company = db.company;
 const Role = db.role;
 const Job = db.job;
 
-var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
 exports.overviewAllDriver = (req, res) => {
@@ -17,7 +16,7 @@ exports.overviewAllDriver = (req, res) => {
         .exec((err, user) => {
             Role.findOne({'name': 'driver'}).exec((err, driver) => {
                 User.find({'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
-                    .populate("user_detail")
+                    .populate("user_detail").populate('avatar')
                     .exec((err, callback) => {
                     res.status(200).send(callback)
                 });
@@ -180,6 +179,7 @@ exports.driverJobOverview = (req,res) => {
         populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
         page:req.query.page,
         limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
     };
     Job.paginate({'driver': req.userId}, options, function (err, result) {
         if (err) {
@@ -198,5 +198,22 @@ exports.jobDriverDetail = (req,res ) => {
             return;
         }
         res.status(200).send(job_callback)
+    });
+}
+
+exports.changeStatus = (req, res) => {
+    Job.findById({_id: req.params.job_id}).exec((err, job_callback) => {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
+        let new_status = job_callback.status + 1;
+        job_callback.updateOne( {status: new_status}, [], function (err, doc) {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
+            res.status(200).send({message: 'updated'});
+        });
     });
 }
