@@ -13,7 +13,7 @@ const User = mongoose.model(
       created_at: String,
       updated_at: String,
       status: Boolean,
-      notification: Number,
+      notification: { type: Number, default: 0 },
       role:
           [{
               type: mongoose.Schema.Types.ObjectId,

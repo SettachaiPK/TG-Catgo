@@ -47,6 +47,10 @@ exports.checktaxid = (req, res) => {
             tax_id: {$in: req.body.taxid}
         },
         (err, taxid) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             if (taxid.length === 0) {
                 const company = new Company({
                     tax_id: req.body.taxid,
@@ -66,7 +70,7 @@ exports.checktaxid = (req, res) => {
                         address: req.body.address,
                     });
                     company_detail.tax_id.push(company._id);
-                    company_detail.save( err => {
+                    company_detail.save(err => {
                         if (err){
                             res.status(500).send({message: err});
                             return;
@@ -223,9 +227,13 @@ exports.signin = (req, res) => {
             });
             User.findById(user._id).populate("role").populate("avatar")
                 .exec((err, user_callback) => {
-                user_callback.updateOne({refresh_token: refreshToken},
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
+                    user_callback.updateOne({refresh_token: refreshToken},
                     [],
-                    function (err, doc) {
+                    function (err) {
                         if (err) {
                             res.status(500).send({message: err});
                             return;
@@ -289,9 +297,13 @@ exports.resetPwd = (req, res) => {
         });
 
         User.findById(req.userId).exec((err, user_callback) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             user_callback.updateOne( { password: bcrypt.hashSync(req.body.password, 8) },
                 [],
-                function (err, doc){
+                function (err){
                     if (err) {
                         res.status(500).send({message: err});
                         return;

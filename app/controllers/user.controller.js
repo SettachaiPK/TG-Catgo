@@ -9,14 +9,14 @@ const Profile_image = db.profile_image;
 
 var bcrypt = require("bcryptjs");
 
-exports.allAccess = (req, res) => {
-    res.status(200).send("Public Content.");
-};
-
 exports.userDetail = (req, res) => {
     User.findById(req.userId)
         .populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             res.status(200).send({
                 prefix: user.user_detail[0].prefix,
                 firstname: user.user_detail[0].firstname,
@@ -42,8 +42,16 @@ exports.editPersonalInfo = (req, res) => {
     }
     User.findById(req.userId).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             if(req.files) {
-                Profile_image.find({name: "default"}, ((err1, docs) => {
+                Profile_image.find({name: "default"}, ((err, docs) => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
                     // user doesn't have profile image
                     if (user.avatar[0]._id.equals(docs[0]._id)) {
                         new Profile_image({
@@ -55,7 +63,7 @@ exports.editPersonalInfo = (req, res) => {
                                 return;
                             }
                             user.updateOne({'avatar': result}, [],
-                                function (err, doc) {
+                                function (err) {
                                     if (err) {
                                         res.status(500).send({message: err});
                                         return;
@@ -67,7 +75,7 @@ exports.editPersonalInfo = (req, res) => {
                     else {
                         user.avatar[0].updateOne({value: image_data.data.toString('base64')},
                             [],
-                            function (err, doc) {
+                            function (err) {
                                 if (err) {
                                     res.status(500).send({message: err});
                                     return;
@@ -81,7 +89,7 @@ exports.editPersonalInfo = (req, res) => {
                     lastname: req.body.lastname,
                     phone: req.body.phone },
                 [],
-                function (err, doc){
+                function (err){
                     if (err) {
                         res.status(500).send({message: err});
                         return;
@@ -98,6 +106,10 @@ exports.getUserCompanyDetail = (req, res) => {
             populate: { path: 'company_detail' }
         })
         .exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             res.status(200).send({
                 'name' : user.tax_id[0].company_name,
                 'address' : user.tax_id[0].company_detail[0].address,
@@ -105,8 +117,6 @@ exports.getUserCompanyDetail = (req, res) => {
                 'zipcode' : user.tax_id[0].company_detail[0].company_postal,
                 'taxId' : user.tax_id[0].tax_id
             })
-            // res.status(200).send(user.tax_id[0]);   ของเก่า
-
         });
 };
 
@@ -120,23 +130,35 @@ exports.updateOneCompanyDetail = (req, res) => {
             populate: {path: 'company_detail'}
         })
         .exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             Company.findById(user.tax_id[0]._id).exec((err, company) => {
+                if (err) {
+                    res.status(500).send({message: err});
+                    return;
+                }
                 company.updateOne({company_name: req.body.companyName}, [],
-                    function (err, doc) {
+                    function (err) {
                         if (err) {
                             res.status(500).send({message: err});
                             return;
                         }
                         Company_detail.findById(company.company_detail[0]._id)
                             .exec((err, company_detail) => {
-                            company_detail.updateOne({
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                                company_detail.updateOne({
                                     company_name: req.body.companyName,
                                     address: req.body.address,
                                     company_province: req.body.province,
                                     company_postal: req.body.postal
                                 },
                                 [],
-                                function (err, doc) {
+                                function (err) {
                                     if (err) {
                                         res.status(500).send({message: err});
                                         return;
@@ -151,6 +173,10 @@ exports.updateOneCompanyDetail = (req, res) => {
 exports.changePwd = (req, res) => {
 
         User.findById(req.userId).exec((err, user_callback) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             bcrypt.compare(req.body.oldpassword, user_callback.password, function(err, result) {
                 if (err){
                     res.status(500).send({message: err});

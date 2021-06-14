@@ -6,6 +6,7 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Job = db.job;
 const Log = db.log;
+const Role = db.role;
 
 
 exports.getAllJob = (req, res) => {
@@ -24,7 +25,7 @@ exports.getAllJob = (req, res) => {
     });
 };
 
-
+// 2 > 3 notify every ff in company
 exports.jobPickUp = (req, res) => {
     Job.findOne({"_id" : req.params.job_id, "status" : 2})
         .populate("driver", '-password')
@@ -56,8 +57,31 @@ exports.jobPickUp = (req, res) => {
                         res.status(500).send({message: err});
                         return;
                     }
+                    Role.findOne({ name: {$in: "freight-forwarder"}},(err, roles) => {
+                            if (err) {
+                                res.status(500).send({message: err});
+                                return;
+                            }
+                            User.find({ 'tax_id' : job_callback.company[0], 'role' : roles._id }).exec((err,ff_users) => {
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                                ff_users.forEach(function(ff_user,index){
+                                    console.log(ff_user);
+                                    ff_user.notification += 1;
+                                    ff_user.save((err)=>{
+                                        if (err) {
+                                            res.status(500).send({message: err});
+                                            return;
+                                        }
+                                    });
+                                });
+                                res.status(200).send({message: "Pick Up Successful"})
+                            })
+                        }
+                    );
                 });
-                res.status(200).send({message: "Pick Up Successful"})
             })
         });
 }
@@ -73,7 +97,7 @@ exports.jobTgadminDetail = (req,res ) => {
         res.status(200).send(job_callback)
     });
 }
-
+//1 > 2 
 exports.confirmPayment = (req, res) => {
     Job.findOne({_id: req.params.job_id, status: 1}).exec((err, job_callback) => {
         if (err) {

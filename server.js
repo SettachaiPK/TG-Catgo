@@ -23,7 +23,7 @@ require('dotenv').config()
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
 var corsOptions = {
-    origin: "http://localhost:8080"
+    origin: process.env.CLIENTURL
 };
 
 // define root path
@@ -63,7 +63,7 @@ require("./app/routes/public.routes")(app);
 require("./app/routes/chat.routes")(app);
 
 // set port, listen for requests
-const PORT = process.env.PORT || 8081;
+const PORT = 8081;
 server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
@@ -71,15 +71,33 @@ server = app.listen(PORT, () => {
 //socket.io instantiation
 const io = require("socket.io")(server, {
     cors: {
-      origin: '*',
+        origin: process.env.CLIENTURL,
+        methods: ["GET", "POST"],
+        credentials: false
     }
   });
 
 //listen on every connection
 io.on('connection', (socket) => {
+    socket.on('join-with-id',(data) => {
+        socket.join(data.user_id);
+        console.log("User :" +data.user_id+" online ");
+        User.findById(data.user_id).exec((err,user) => {
+            console.log(data.user_id);
+            io.in(data.user_id).emit('recieve-notify', 
+            { 
+                user_id: data.user_id,
+                notification:  user.notification
+            });
+            console.log("sent notify :" + user.notification );
+            }
+        );
+    });
+    
     socket.on('join', (data) => {
         socket.join(data.job_id);
     });
+
     socket.on('disconnect', () => {
         console.log("A user disconnected");
     });
@@ -97,7 +115,7 @@ io.on('connection', (socket) => {
                 createAt: data.createAt,
                 avatar: result.avatar[0].value,
                 username: result.username
-            }); 
+            });
             const chat = new Chat({
                 message: data.message,
                 });    

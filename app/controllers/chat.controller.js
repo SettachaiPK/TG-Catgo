@@ -32,6 +32,10 @@ exports.chatHistory = (req, res) => {
             }
         }
         Avatar.find({ name: { $in : checkid }}).select('name value -_id').exec((err, result) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             output.push(result);
             res.status(200).send(output);
         })

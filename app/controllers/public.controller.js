@@ -32,6 +32,10 @@ exports.createCommentDriver = (req,res) => {
                 }
                 // save avg rating to driver model
                 User.findById(req.body.driver_id).populate("user_detail").exec((err, driver_callback) => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                        return;
+                    }
                     Comment.aggregate([{
                         $match : {'driver': driver_callback._id},
                     },{
@@ -61,6 +65,7 @@ exports.createCommentDriver = (req,res) => {
     });
 }
 
+// 4 > 5 notify driver assigner and driver
 exports.receivedPackage = (req, res) => {
     Job.findById({_id: req.params.job_id, status: 4}).exec((err, job_callback) => {
         if (err) {
@@ -73,8 +78,25 @@ exports.receivedPackage = (req, res) => {
                 res.status(500).send({message: err});
                 return;
             }
-
-            res.status(200).send({message: "Package received"})
+            User.findById(job_callback.driverAssigner[0]).exec((err, userAssigner) => {
+                userAssigner.notification += 1;
+                userAssigner.save((err) => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                    }
+                    User.findById(job_callback.driver[0]).exec((err, userDriver) => {
+                        userDriver.notification += 1;
+                        userDriver.save((err) => {
+                            if (err) {
+                                res.status(500).send({message: err});
+                            }
+                            
+                            res.status(200).send({message: "Package received"})
+                        })
+                    })
+                })
+            })
+            
         })
     });
 }

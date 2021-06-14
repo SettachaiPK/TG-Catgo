@@ -132,7 +132,7 @@ exports.overviewAllJob = (req, res) => {
             });
         });
 }
-
+//0 
 exports.createJob = (req, res) => {
     const job = new Job({
         status: 0, // Simulated TG API Matched job
@@ -149,8 +149,12 @@ exports.createJob = (req, res) => {
             return;
         }
         User.findById(req.userId).populate('tax_id').exec((err, user) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
             job.company = user.tax_id[0];
-            job.save((err, user) => {
+            job.save((err) => {
                 if (err) {
                     res.status(500).send({message: err});
                     return;
@@ -172,7 +176,7 @@ exports.createJob = (req, res) => {
     });
 };
 
-
+// 3 > 4 notify assigned driver
 exports.selectDriver = (req, res) => {
 
     Job.findOne({'_id': req.params.job_id, 'status': 3})
@@ -193,7 +197,7 @@ exports.selectDriver = (req, res) => {
             job_callback.driver.push(req.body.driver);
             job_callback.driverAssigner.push(req.userId);
             job_callback.status = 4;
-            job_callback.save((err, job) => {
+            job_callback.save((err) => {
                 if (err) {
                     res.status(500).send({message: err});
                     return;
@@ -208,8 +212,19 @@ exports.selectDriver = (req, res) => {
                         res.status(500).send({message: err});
                         return;
                     }
+                    User.findById(req.body.driver).exec((err,userDriver)=>{
+                        if (err) {
+                            res.status(500).send({message: err});
+                        }
+                        userDriver.notification += 1;
+                        userDriver.save((err)=>{
+                            if (err) {
+                                res.status(500).send({message: err});
+                            }
+                            res.status(200).send({message: "Driver selected"})
+                        })
+                    })
                 });
-                res.status(200).send({message: "Driver selected"})
             })
         });
 }
@@ -227,6 +242,10 @@ exports.jobDetail = (req, res) => {
 
 exports.callCommentDriver = (req,res) => {
     User.findById(req.params.driver_id).exec((err, driver_callback) => {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
         Comment.aggregate([{
             $match : {'driver': driver_callback._id},
         },{
@@ -245,7 +264,7 @@ exports.callCommentDriver = (req,res) => {
         });
     });
 }
-
+// 0 > 1
 exports.jobMatching = (req, res) => {
     Job.findById({_id: req.params.job_id, status: 0}).exec((err, job_callback) => {
         if (err) {
