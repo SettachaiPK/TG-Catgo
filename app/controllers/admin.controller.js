@@ -117,14 +117,13 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                                             }
                                             let result = {}
                                             if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
-                                            if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total };
-                                            if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total };
-                                            if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total };
-                                            if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total };
-                                            if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total };
+                                            if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
+                                            if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
+                                            if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
+                                            if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
+                                            if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
                                             if (driver_count.length === 0) { result.driver_count === 0 } else { result.driver_count = driver_count[0].total }
                                             if (company_count.length === 0) { result.company_count === 0 } else { result.company_count = company_count[0].total }
-                                            console.log(result);
                                             res.status(200).send(result)
                                         });
                                     })

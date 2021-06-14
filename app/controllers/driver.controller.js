@@ -176,12 +176,12 @@ exports.createDriver = (req, res) => {
 
 exports.driverJobOverview = (req,res) => {
     let options = {
-        populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
+        populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driverAssigner', select: 'user_detail', populate: { path: 'user_detail' } }],
         page:req.query.page,
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Job.paginate({'driver': req.userId}, options, function (err, result) {
+    Job.paginate({'driver': req.userId, 'status': req.query.status}, options, function (err, result) {
         if (err) {
             res.status(500).send({message: err});
             return;

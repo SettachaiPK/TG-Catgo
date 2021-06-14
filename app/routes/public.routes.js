@@ -19,5 +19,10 @@ module.exports = app => {
         "/:job_id/comment",
         publicController.createCommentDriver
     );
+
+    router.get(
+        "/:job_id/received",
+        publicController.receivedPackage
+    );
     app.use('/apis/public', router);
 };

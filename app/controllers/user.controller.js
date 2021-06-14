@@ -14,7 +14,6 @@ exports.allAccess = (req, res) => {
 };
 
 exports.userDetail = (req, res) => {
-    console.log(req.accessToken);
     User.findById(req.userId)
         .populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {

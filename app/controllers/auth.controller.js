@@ -190,9 +190,6 @@ exports.signup = (req, res) => {
  * @returns boolean
  * @see
  */
-
-const tokenList = {}
-
 exports.signin = (req, res) => {
     User.findOne({
         username: req.body.username

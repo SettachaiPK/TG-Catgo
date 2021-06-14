@@ -13,8 +13,8 @@ exports.createCommentDriver = (req,res) => {
             res.status(500).send({message: err});
             return;
         }
-        let new_status = job_callback.status + 1;
-        job_callback.updateOne( {status: new_status}, [], function (err, doc) {
+        job_callback.status = 6;
+        job_callback.save(err => {
             if (err) {
                 res.status(500).send({message: err});
                 return;
@@ -30,7 +30,6 @@ exports.createCommentDriver = (req,res) => {
                     res.status(500).send({message: err});
                     return;
                 }
-            
                 // save avg rating to driver model
                 User.findById(req.body.driver_id).populate("user_detail").exec((err, driver_callback) => {
                     Comment.aggregate([{
@@ -55,10 +54,27 @@ exports.createCommentDriver = (req,res) => {
                             }
                             res.status(200).send({message: "Commented"});
                         })
-                        
                     });
                 });
             });
         });
+    });
+}
+
+exports.receivedPackage = (req, res) => {
+    Job.findById({_id: req.params.job_id, status: 4}).exec((err, job_callback) => {
+        if (err) {
+            res.status(500).send({message: err});
+            return;
+        }
+        job_callback.status = 5;
+        job_callback.save((err) => {
+            if (err) {
+                res.status(500).send({message: err});
+                return;
+            }
+
+            res.status(200).send({message: "Package received"})
+        })
     });
 }
