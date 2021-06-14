@@ -7,6 +7,7 @@ const Company = db.company;
 const Job = db.job;
 const Log = db.log;
 const Role = db.role;
+const Notification = db.notification;
 
 
 exports.getAllJob = (req, res) => {
@@ -68,13 +69,23 @@ exports.jobPickUp = (req, res) => {
                                     return;
                                 }
                                 ff_users.forEach(function(ff_user,index){
-                                    console.log(ff_user);
-                                    ff_user.notification += 1;
-                                    ff_user.save((err)=>{
+                                    const notification = new Notification({
+                                        detail: "TG-Admin set pickup time for job"
+                                    });
+                                    notification.user.push(ff_user._id);
+                                    notification.job.push(req.params.job_id);
+                                    notification.save(err => {
                                         if (err) {
                                             res.status(500).send({message: err});
                                             return;
                                         }
+                                        ff_user.notification += 1;
+                                        ff_user.save((err)=>{
+                                            if (err) {
+                                                res.status(500).send({message: err});
+                                                return;
+                                            }
+                                        })
                                     });
                                 });
                                 res.status(200).send({message: "Pick Up Successful"})

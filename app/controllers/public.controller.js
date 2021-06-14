@@ -6,7 +6,7 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Job = db.job;
 const Comment = db.comment;
-
+const Notification = db.notification;
 exports.createCommentDriver = (req,res) => {
     Job.findById(req.params.job_id).exec((err, job_callback) => {
         if (err) {
@@ -79,19 +79,40 @@ exports.receivedPackage = (req, res) => {
                 return;
             }
             User.findById(job_callback.driverAssigner[0]).exec((err, userAssigner) => {
-                userAssigner.notification += 1;
-                userAssigner.save((err) => {
+                const notification = new Notification({
+                    detail: "Job completed"
+                });
+                notification.user.push(userAssigner._id);
+                notification.job.push(req.params.job_id);
+                notification.save(err => {
                     if (err) {
                         res.status(500).send({message: err});
+                        return;
                     }
-                    User.findById(job_callback.driver[0]).exec((err, userDriver) => {
-                        userDriver.notification += 1;
-                        userDriver.save((err) => {
-                            if (err) {
-                                res.status(500).send({message: err});
-                            }
-                            
-                            res.status(200).send({message: "Package received"})
+                    userAssigner.notification += 1;
+                    userAssigner.save((err) => {
+                        if (err) {
+                            res.status(500).send({message: err});
+                        }
+                        User.findById(job_callback.driver[0]).exec((err, userDriver) => {
+                            const notification = new Notification({
+                                detail: "Job completed"
+                            });
+                            notification.user.push(userDriver._id);
+                            notification.job.push(req.params.job_id);
+                            notification.save(err => {
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                    return;
+                                }
+                                userDriver.notification += 1;
+                                userDriver.save((err) => {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                    }
+                                    res.status(200).send({message: "Package received"})
+                                })
+                            })
                         })
                     })
                 })

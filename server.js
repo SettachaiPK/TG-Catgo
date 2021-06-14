@@ -13,6 +13,7 @@ const Role = db.role;
 const Profile_image = db.profile_image;
 const Chat = db.chat;
 const User = db.user;
+const Notification = db.notification;
 const Comment = db.comment;
 const app = express();
 
@@ -81,15 +82,24 @@ const io = require("socket.io")(server, {
 io.on('connection', (socket) => {
     socket.on('join-with-id',(data) => {
         socket.join(data.user_id);
-        console.log("User :" +data.user_id+" online ");
+        console.log("User: " + data.user_id + " online ");
         User.findById(data.user_id).exec((err,user) => {
-            console.log(data.user_id);
-            io.in(data.user_id).emit('recieve-notify', 
+            io.in(data.user_id).emit('receive-notify',
             { 
                 user_id: data.user_id,
                 notification:  user.notification
             });
-            console.log("sent notify :" + user.notification );
+            console.log("sent notify: " + user.notification );
+            user.notification = 0;
+            user.save();
+            }
+        );
+        Notification.find({user: data.user_id}).exec((err,output) => {
+            output.forEach(function(each_output,index){
+                console.log(each_output);
+                io.in(data.user_id).emit('notify-detail', each_output);
+                });
+            Notification.deleteMany({user: data.user_id}).exec();
             }
         );
     });
@@ -127,8 +137,7 @@ io.on('connection', (socket) => {
 })
 
 // connect to database
-db.mongoose
-    .connect(process.env.DB, {
+db.mongoose.connect(process.env.DB, {
         useNewUrlParser: true,
         useUnifiedTopology: true
     })

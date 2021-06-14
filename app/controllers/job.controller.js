@@ -7,6 +7,7 @@ const Company = db.company;
 const Job = db.job;
 const Log = db.log
 const Comment = db.comment;
+const Notification = db.notification;
 
 // aggregate.count("userCount");
 
@@ -215,17 +216,29 @@ exports.selectDriver = (req, res) => {
                     User.findById(req.body.driver).exec((err,userDriver)=>{
                         if (err) {
                             res.status(500).send({message: err});
+                            return;
                         }
-                        userDriver.notification += 1;
-                        userDriver.save((err)=>{
+                        const notification = new Notification({
+                            detail: "You has been assigned to job"
+                        });
+                        notification.user.push(userDriver._id);
+                        notification.job.push(req.params.job_id);
+                        notification.save(err => {
                             if (err) {
                                 res.status(500).send({message: err});
+                                return;
                             }
-                            res.status(200).send({message: "Driver selected"})
-                        })
-                    })
+                            userDriver.notification += 1;
+                            userDriver.save((err)=>{
+                                if (err) {
+                                    res.status(500).send({message: err});
+                                }
+                                res.status(200).send({message: "Driver selected"})
+                            })
+                        });
+                    });
                 });
-            })
+            });
         });
 }
 
