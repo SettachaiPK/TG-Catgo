@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const Company = mongoose.model(
     "Company",
@@ -11,7 +12,7 @@ const Company = mongoose.model(
         }],
         driver_count: Number,
         job_count: Number
-    })
+    }).plugin(mongoosePaginate)
 );
 
 module.exports = Company;

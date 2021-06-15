@@ -136,12 +136,17 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
 };
 
 exports.getAllCompany =  (req, res) => {
-    Company.find().exec((err, AllCompany) => {
+    let options = {
+        page:req.query.page,
+        limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
+    };
+    Company.paginate({}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
-        res.status(200).send(AllCompany);
-    })
+        res.status(200).send(result)
+    });
 };
 
 exports.getCompanyDetail = (req, res) => {

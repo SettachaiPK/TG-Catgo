@@ -6,6 +6,7 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
+const Notification = db.notification;
 
 var bcrypt = require("bcryptjs");
 
@@ -185,3 +186,25 @@ exports.changePwd = (req, res) => {
             });
         });
 };
+
+exports.showAndClearNotification = (req, res) => {
+    User.findOne({_id: req.userId}).exec((err, user) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        user.notification = 0;
+        user.save(err => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
+        })
+    });
+    Notification.find({user: req.userId}).exec((err,output) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        res.status(200).send(output);
+        Notification.deleteMany({user: req.userId}).exec();
+        }
+    );
+}

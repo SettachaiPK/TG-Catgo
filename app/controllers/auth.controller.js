@@ -6,12 +6,11 @@ const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
-const Log = db.log;
 
 var jwt = require("jsonwebtoken");
 var bcrypt = require("bcryptjs");
 
-exports.getcompanydetail_ifexist = (req, res) => {
+exports.checkExistCompany = (req, res) => {
     Company.find({ tax_id: {$in: req.params.taxid} }).populate('company_detail')
         .exec((err, company_detail) => {
             if (err) {
@@ -39,7 +38,7 @@ exports.getcompanydetail_ifexist = (req, res) => {
  *
  * @see
  */
-exports.checktaxid = (req, res) => {
+exports.createCompany = (req, res) => {
   if (req.body.taxid) {
       Company.find(
         {
