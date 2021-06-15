@@ -19,8 +19,7 @@ exports.getAllJob = (req, res) => {
     };
     Job.paginate({'status': req.query.status}, options, function (err, result) {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         res.status(200).send(result)
     });
@@ -36,8 +35,7 @@ exports.jobPickUp = (req, res) => {
                 return;
             }
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             job_callback.dockNumber = req.body.dockNumber;
             job_callback.pickupTimeHours = req.body.pickupTimeHours;
@@ -45,8 +43,7 @@ exports.jobPickUp = (req, res) => {
             job_callback.status = 3;
             job_callback.save((err) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 const log = new Log({
                     action: "Select pick up time"
@@ -55,18 +52,15 @@ exports.jobPickUp = (req, res) => {
                 log.job.push(job_callback._id);
                 log.save(err => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     Role.findOne({ name: {$in: "freight-forwarder"}},(err, roles) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             User.find({ 'tax_id' : job_callback.company[0], 'role' : roles._id }).exec((err,ff_users) => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 ff_users.forEach(function(ff_user,index){
                                     const notification = new Notification({
@@ -76,14 +70,12 @@ exports.jobPickUp = (req, res) => {
                                     notification.job.push(req.params.job_id);
                                     notification.save(err => {
                                         if (err) {
-                                            res.status(500).send({message: err});
-                                            return;
+                                            return res.status(500).send({message: err});
                                         }
                                         ff_user.notification += 1;
                                         ff_user.save((err)=>{
                                             if (err) {
-                                                res.status(500).send({message: err});
-                                                return;
+                                                return res.status(500).send({message: err});
                                             }
                                         })
                                     });
@@ -101,8 +93,7 @@ exports.jobPickUp = (req, res) => {
 exports.jobTgadminDetail = (req,res ) => {
     Job.findById({_id :req.params.job_id}).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
 
         res.status(200).send(job_callback)
@@ -112,14 +103,12 @@ exports.jobTgadminDetail = (req,res ) => {
 exports.confirmPayment = (req, res) => {
     Job.findOne({_id: req.params.job_id, status: 1}).exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         job_callback.status = 2;
         job_callback.save(err => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             const log = new Log({
                 action: "Confirm payment"
@@ -128,8 +117,7 @@ exports.confirmPayment = (req, res) => {
             log.job.push(job_callback._id);
             log.save(err => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
             });
             res.status(200).send({message: "Payment Successful"})

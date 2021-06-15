@@ -14,8 +14,7 @@ exports.userDetail = (req, res) => {
         .populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send({
                 prefix: user.user_detail[0].prefix,
@@ -43,14 +42,12 @@ exports.editPersonalInfo = (req, res) => {
     User.findById(req.userId).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             if(req.files) {
                 Profile_image.find({name: "default"}, ((err, docs) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     // user doesn't have profile image
                     if (user.avatar[0]._id.equals(docs[0]._id)) {
@@ -59,14 +56,12 @@ exports.editPersonalInfo = (req, res) => {
                             value: image_data.data.toString('base64')
                         }).save((err, result) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             user.updateOne({'avatar': result}, [],
                                 function (err) {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                 });
                         });
@@ -77,8 +72,7 @@ exports.editPersonalInfo = (req, res) => {
                             [],
                             function (err) {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                             })
                     }
@@ -91,8 +85,7 @@ exports.editPersonalInfo = (req, res) => {
                 [],
                 function (err){
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     res.status(200).send({message: "updated"})
                 });
@@ -107,8 +100,7 @@ exports.getUserCompanyDetail = (req, res) => {
         })
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send({
                 'name' : user.tax_id[0].company_name,
@@ -131,25 +123,21 @@ exports.updateOneCompanyDetail = (req, res) => {
         })
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             Company.findById(user.tax_id[0]._id).exec((err, company) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 company.updateOne({company_name: req.body.companyName}, [],
                     function (err) {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         Company_detail.findById(company.company_detail[0]._id)
                             .exec((err, company_detail) => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 company_detail.updateOne({
                                     company_name: req.body.companyName,
@@ -160,8 +148,7 @@ exports.updateOneCompanyDetail = (req, res) => {
                                 [],
                                 function (err) {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                     res.status(200).send({status: "updated"})
                                 });
@@ -174,8 +161,7 @@ exports.changePwd = (req, res) => {
 
         User.findById(req.userId).exec((err, user_callback) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             bcrypt.compare(req.body.oldpassword, user_callback.password, function(err, result) {
                 if (err){
@@ -187,8 +173,7 @@ exports.changePwd = (req, res) => {
                             [],
                             function (err, doc) {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 res.status(200).send({status: "updated"});
                             });

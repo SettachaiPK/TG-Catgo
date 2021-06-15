@@ -20,8 +20,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
         }
     }]).exec((err, job_status1) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         // status 2
         Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{
@@ -33,8 +32,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
             }
         }]).exec((err, job_status2) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             //status 3
             Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{
@@ -46,8 +44,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                 }
             }]).exec((err, job_status3) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 //status 4
                 Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{
@@ -59,8 +56,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                     }
                 }]).exec((err, job_status4) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     //status 5
                     Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{
@@ -72,8 +68,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                         }
                     }]).exec((err, job_status5) => {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         
                         Company.aggregate([{
@@ -85,13 +80,11 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                             }
                         }]).exec((err, company_count) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             Role.findOne({'name':"freight-forwarder"}).exec((err,roles) => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
                                     $group : {
@@ -102,14 +95,12 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                                     }
                                 }]).exec((err, ff_count) => {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                     
                                     Role.findOne({'name':"driver"}).exec((err,roles) => {
                                         if (err) {
-                                            res.status(500).send({message: err});
-                                            return;
+                                            return res.status(500).send({message: err});
                                         }
                                         User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
                                             $group : {
@@ -120,8 +111,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
                                             }
                                         }]).exec((err, driver_count) => {
                                             if (err) {
-                                                res.status(500).send({message: err});
-                                                return;
+                                                return res.status(500).send({message: err});
                                             }
                                             let result = {}
                                             if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
@@ -148,8 +138,7 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
 exports.getAllCompany =  (req, res) => {
     Company.find().exec((err, AllCompany) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         res.status(200).send(AllCompany);
     })
@@ -159,14 +148,12 @@ exports.getCompanyDetail = (req, res) => {
     Company.findById(req.params.company_id).populate({path: 'company_detail'})
         .exec((err, company_detail) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             User.find({"tax_id": company_detail._id})
             .exec((err, user_detail) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 res.status(200).send({user_detail, company_detail});
         })
@@ -177,15 +164,13 @@ exports.updateOneCompanyDetail = (req, res) => {
     Company_detail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
         .exec((err, detail) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             detail.tax_id[0].updateOne( { company_name: req.body.companyName },
             [],
             function (err){
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 detail.updateOne( { company_name: req.body.companyName,
                         address: req.body.address,
@@ -194,8 +179,7 @@ exports.updateOneCompanyDetail = (req, res) => {
                     [],
                     function (err){
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
 
                         res.status(200).send({status: "updated"})
@@ -208,8 +192,7 @@ exports.deleteOneUser = (req,res) => {
     Job.find({ driver:req.body.user_id})
         .exec((err, result) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             if (result.length > 0) {
             res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
@@ -218,15 +201,13 @@ exports.deleteOneUser = (req,res) => {
             User.findOne({_id: req.body.user_id }).populate("role")
                 .exec((err, user_detail) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     if (user_detail.role[0].name === 'driver'){
                         Company.findById(req.params.company_id)
                             .exec((err, company_callback) => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 company_callback.driver_count -= 1;
                                 company_callback.save(err => {
@@ -240,14 +221,12 @@ exports.deleteOneUser = (req,res) => {
             User_detail.deleteOne({ username: req.body.user_id }).
             exec(err => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 User.deleteOne({ _id: req.body.user_id })
                     .exec(err => {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         res.status(200).send({status:"Successful deletion"});
                     });
@@ -259,8 +238,7 @@ exports.viewEditUserInfo = (req, res) => {
     User.findById(req.params.user_id).populate("user_detail")
         .exec((err, callback) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send(callback)
     });
@@ -288,14 +266,12 @@ exports.adminEditUserInfo = (req, res) => {
     User.findById(req.params.user_id).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             if (req.files) {
                 Profile_image.find({name: "default"}, ((err, docs) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     // user doesn't have profile image
                     if (user.avatar[0]._id.equals(docs[0]._id)) {
@@ -304,14 +280,12 @@ exports.adminEditUserInfo = (req, res) => {
                             value: image_data.data.toString('base64')
                         }).save((err, result) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             user.updateOne({'avatar': result}, [],
                                 function (err) {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                 });
                         });
@@ -322,8 +296,7 @@ exports.adminEditUserInfo = (req, res) => {
                             [],
                             function (err) {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                             })
                     }
@@ -331,8 +304,7 @@ exports.adminEditUserInfo = (req, res) => {
             }
             user.updateOne( { "$set": updateBlock }, [], function (err){
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     user.user_detail[0].updateOne( { prefix: req_detail.prefix,
                             firstname: req_detail.firstname,
@@ -345,8 +317,7 @@ exports.adminEditUserInfo = (req, res) => {
                         [],
                         function (err){
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             res.status(200).send({message: "updated"})
                         });

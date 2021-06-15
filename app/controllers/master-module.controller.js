@@ -5,8 +5,7 @@ const Province = db.province;
 exports.provinces = (req, res) => {
     Province.find().exec((err, data) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         res.status(200).send(data)
     });

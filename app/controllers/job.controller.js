@@ -16,8 +16,7 @@ exports.overviewJobStatusCount = (req, res) => {
         .populate('tax_id')
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             // status 0
             Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 0}] } } ,{
@@ -29,8 +28,7 @@ exports.overviewJobStatusCount = (req, res) => {
                 }
             }]).exec((err, job_status0) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 // status 1
                 Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 1}] } } ,{
@@ -42,8 +40,7 @@ exports.overviewJobStatusCount = (req, res) => {
                     }
                 }]).exec((err, job_status1) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     //status 2
                     Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 2}] } } ,{
@@ -55,8 +52,7 @@ exports.overviewJobStatusCount = (req, res) => {
                         }
                     }]).exec((err, job_status2) => {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         //status 3
                         Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 3}] } } ,{
@@ -68,8 +64,7 @@ exports.overviewJobStatusCount = (req, res) => {
                             }
                         }]).exec((err, job_status3) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             //status 4
                             Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 4}] } } ,{
@@ -81,8 +76,7 @@ exports.overviewJobStatusCount = (req, res) => {
                                 }
                             }]).exec((err, job_status4) => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 //status 5
                                 Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 5}] } } ,{
@@ -94,8 +88,7 @@ exports.overviewJobStatusCount = (req, res) => {
                                     }
                                 }]).exec((err, job_status5) => {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                     let result = {}
                                     if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
@@ -126,8 +119,7 @@ exports.overviewAllJob = (req, res) => {
         .exec((err, user) => {
             Job.paginate({'company': user.tax_id[0]._id, 'status': req.query.status}, options, function (err, result) {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 res.status(200).send(result)
             });
@@ -146,19 +138,16 @@ exports.createJob = (req, res) => {
     });
     job.save(err => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         User.findById(req.userId).populate('tax_id').exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             job.company = user.tax_id[0];
             job.save((err) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 const log = new Log({
                     action: "Create job"
@@ -167,8 +156,7 @@ exports.createJob = (req, res) => {
                 log.job.push(job._id);
                 log.save(err => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                 });
                 res.status(200).send({message: "Job was created successfully!"})
@@ -188,8 +176,7 @@ exports.selectDriver = (req, res) => {
                 return;
             }
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             if (job_callback.driver.length > 0) {
                 job_callback.driver.pop()
@@ -200,8 +187,7 @@ exports.selectDriver = (req, res) => {
             job_callback.status = 4;
             job_callback.save((err) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 const log = new Log({
                     action: "Select driver"
@@ -210,13 +196,11 @@ exports.selectDriver = (req, res) => {
                 log.job.push(job_callback._id);
                 log.save(err => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     User.findById(req.body.driver).exec((err,userDriver)=>{
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         const notification = new Notification({
                             detail: "You has been assigned to job"
@@ -225,8 +209,7 @@ exports.selectDriver = (req, res) => {
                         notification.job.push(req.params.job_id);
                         notification.save(err => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             userDriver.notification += 1;
                             userDriver.save((err)=>{
@@ -245,8 +228,7 @@ exports.selectDriver = (req, res) => {
 exports.jobDetail = (req, res) => {
     Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
 
         res.status(200).send(job_callback)
@@ -256,8 +238,7 @@ exports.jobDetail = (req, res) => {
 exports.callCommentDriver = (req,res) => {
     User.findById(req.params.driver_id).exec((err, driver_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         Comment.aggregate([{
             $match : {'driver': driver_callback._id},
@@ -270,8 +251,7 @@ exports.callCommentDriver = (req,res) => {
             }
         }]).exec((err, job_callback) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send(job_callback)
         });
@@ -281,16 +261,14 @@ exports.callCommentDriver = (req,res) => {
 exports.jobMatching = (req, res) => {
     Job.findById({_id: req.params.job_id, status: 0}).exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         job_callback.flightDate = req.body.flightDate;
         job_callback.numberOfPieces = req.body.numberOfPieces;
         job_callback.status = 1;
         job_callback.save((err) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send({message: "Pick Up Successful"})
         })

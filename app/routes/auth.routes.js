@@ -17,14 +17,17 @@ module.exports = function(app) {
 
   router.post(
     "/signup",
-    [
-      verifySignUp.checkDuplicateUsernameOrEmail
-    ],
+    [verifySignUp.checkDuplicateUsernameOrEmail],
     authController.signup
   );
 
+  router.get(
+      "/verify/:token",
+      authController.verifyEmail
+  );
+
   router.post("/signin",
-      authController.signin
+      authController.signIn
   );
 
   router.get("/forgot/:email",
@@ -38,9 +41,6 @@ module.exports = function(app) {
   router.post("/reset",
       authController.resetPwd
   );
-
-  router.post("/log",[authJwt.verifyToken],
-      authController.log)
 
   app.use('/apis/auth', router);
 };

@@ -14,7 +14,6 @@ const Profile_image = db.profile_image;
 const Chat = db.chat;
 const User = db.user;
 const Notification = db.notification;
-const Comment = db.comment;
 const app = express();
 
 //enable dotenv
