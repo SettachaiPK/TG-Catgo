@@ -2,6 +2,7 @@ module.exports = app => {
     var router = require("express").Router();
     const { authJwt } = require("../middlewares");
     const tgAdminController = require("../controllers/tg-admin.controller")
+    const jobController = require("../controllers/job.controller");
 
     app.use(function(req, res, next) {
         res.header(
@@ -28,6 +29,16 @@ module.exports = app => {
         tgAdminController.jobPickUp
     );
 
+    router.get(
+        "/:job_id/confirm_payment",
+        [authJwt.verifyToken, authJwt.isTgAdmin],
+        tgAdminController.confirmPayment
+    )
+
+    router.get(
+        "/:job_id/job_matching",
+        jobController.jobMatching
+    )
 
     app.use('/apis/tgadmin', router);
 };

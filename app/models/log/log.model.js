@@ -9,6 +9,12 @@ const Log = mongoose.model(
                     ref: "User"
             }]
         ,
+        job:
+            [{
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "Job"
+            }]
+        ,
         action: String,
         createAt: {
             type: Date,

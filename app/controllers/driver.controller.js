@@ -14,11 +14,20 @@ exports.overviewAllDriver = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, user) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             Role.findOne({'name': 'driver'}).exec((err, driver) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
                 User.find({'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
                     .populate("user_detail").populate('avatar')
                     .exec((err, callback) => {
-                    res.status(200).send(callback)
+                        if (err) {
+                            return res.status(500).send({message: err});
+                        }
+                        res.status(200).send(callback)
                 });
             })
         });
@@ -28,10 +37,19 @@ exports.driverDetail = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, user) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             Role.findOne({'name': 'driver'}).exec((err, driver) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
                 User.findOne({'_id': req.params.driver_id, 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
                     .populate("user_detail").populate("avatar", 'value')
                     .exec((err, callback) => {
+                        if (err) {
+                            return res.status(500).send({message: err});
+                        }
                         res.status(200).send(callback)
                     });
             })
@@ -57,10 +75,9 @@ exports.editDriverInfo = (req, res) => {
     let req_detail = JSON.parse(req.body.detail);
     User.findById(req.params.driver_id).populate('role').populate('user_detail')
         .exec((err, user) => {
-            user.updateOne( { "$set": updateBlock }, [], function (err, doc){
+            user.updateOne( { "$set": updateBlock }, [], function (err){
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     user.user_detail[0].updateOne( { prefix: req_detail.prefix,
                             firstname: req_detail.firstname,
@@ -71,10 +88,9 @@ exports.editDriverInfo = (req, res) => {
                         zipcode: req_detail.zipcode,
                         },
                         [],
-                        function (err, doc){
+                        function (err){
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             res.status(200).send({message: "updated"})
                         });
@@ -87,8 +103,11 @@ exports.createDriver = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, userFF) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             userFF.tax_id[0].driver_count += 1;
-            userFF.tax_id[0].save((err, job) => {
+            userFF.tax_id[0].save((err) => {
                 if (err) {
                     res.status(500).send({message: err});
                 }
@@ -110,25 +129,18 @@ exports.createDriver = (req, res) => {
             });
             user.save((err, user) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 Profile_image.find({name: "default"}, (err, profile_image) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     user.avatar = profile_image.map(name => name._id);
                 });
                 user.tax_id.push(userFF.tax_id[0]._id)
-                Role.find(
-
-                {'name': 'driver'}
-                    ,
-                    (err, roles) => {
+                Role.find( {'name': 'driver'}, (err, roles) => {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         user.role = roles.map(role => role._id);
                         user.save(err => {
@@ -148,20 +160,17 @@ exports.createDriver = (req, res) => {
                         },
                         (err, username_callback) => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
                             user_detail.username = username_callback.map(username => username._id);
                             user_detail.save(err => {
                                 if (err) {
-                                    res.status(500).send({message: err});
-                                    return;
+                                    return res.status(500).send({message: err});
                                 }
                                 user.user_detail.push(user_detail._id);
                                 user.save(err => {
                                     if (err) {
-                                        res.status(500).send({message: err});
-                                        return;
+                                        return res.status(500).send({message: err});
                                     }
                                     res.send({id: user._id});
                                 });
@@ -176,15 +185,14 @@ exports.createDriver = (req, res) => {
 
 exports.driverJobOverview = (req,res) => {
     let options = {
-        populate: [{path: 'company', populate: { path: 'company_detail' }}, 'driver'],
+        populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driverAssigner', select: 'user_detail', populate: { path: 'user_detail' } }],
         page:req.query.page,
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Job.paginate({'driver': req.userId}, options, function (err, result) {
+    Job.paginate({'driver': req.userId, 'status': req.query.status}, options, function (err, result) {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         res.status(200).send(result)
     });
@@ -194,8 +202,7 @@ exports.driverJobOverview = (req,res) => {
 exports.jobDriverDetail = (req,res ) => {
     Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         res.status(200).send(job_callback)
     });
@@ -204,14 +211,12 @@ exports.jobDriverDetail = (req,res ) => {
 exports.changeStatus = (req, res) => {
     Job.findById({_id: req.params.job_id}).exec((err, job_callback) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         let new_status = job_callback.status + 1;
-        job_callback.updateOne( {status: new_status}, [], function (err, doc) {
+        job_callback.updateOne( {status: new_status}, [], function (err) {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             res.status(200).send({message: 'updated'});
         });

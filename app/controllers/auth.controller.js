@@ -15,8 +15,7 @@ exports.getcompanydetail_ifexist = (req, res) => {
     Company.find({ tax_id: {$in: req.params.taxid} }).populate('company_detail')
         .exec((err, company_detail) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             if (company_detail.length === 0) {
                 res.send({company_exist: false});
@@ -47,6 +46,9 @@ exports.checktaxid = (req, res) => {
             tax_id: {$in: req.body.taxid}
         },
         (err, taxid) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             if (taxid.length === 0) {
                 const company = new Company({
                     tax_id: req.body.taxid,
@@ -56,8 +58,7 @@ exports.checktaxid = (req, res) => {
                 });
                 company.save(err => {
                     if (err){
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     const company_detail = new Company_detail({
                         company_name: req.body.name,
@@ -66,10 +67,9 @@ exports.checktaxid = (req, res) => {
                         address: req.body.address,
                     });
                     company_detail.tax_id.push(company._id);
-                    company_detail.save( err => {
+                    company_detail.save(err => {
                         if (err){
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         company.company_detail.push(company_detail._id);
                         company.save();
@@ -96,7 +96,7 @@ exports.signup = (req, res) => {
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
         email: req.body.email,
-        status: true,
+        status: false,
     });
 
     const user_detail = new User_detail({
@@ -107,20 +107,17 @@ exports.signup = (req, res) => {
     });
     user.save((err, user) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         Profile_image.find({name: "default"}, (err, profile_image) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
             user.avatar = profile_image.map(name => name._id);
         });
         Company.find({tax_id: {$in: req.body.taxid}}, (err, tax_id_callback) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
                 if (req.body.roles === 'driver') {
@@ -139,8 +136,7 @@ exports.signup = (req, res) => {
             },
             (err, roles) => {
                 if (err) {
-                    res.status(500).send({message: err});
-                    return;
+                    return res.status(500).send({message: err});
                 }
                 user.role = roles.map(role => role._id);
                 user.save(err => {
@@ -160,22 +156,22 @@ exports.signup = (req, res) => {
                 },
                 (err, username_callback) => {
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     user_detail.username = username_callback.map(username => username._id);
                     user_detail.save(err => {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         user.user_detail.push(user_detail._id);
                         user.save(err => {
                             if (err) {
-                                res.status(500).send({message: err});
-                                return;
+                                return res.status(500).send({message: err});
                             }
-                            res.send({message: "User was registered successfully!"});
+                            let token = jwt.sign({id: user.id}, config.verifySecret, {
+                                expiresIn: 86400 // 24 hours
+                            });
+                            res.status(200).send({ verifyLink: token });
                         });
                     });
                 },
@@ -184,30 +180,48 @@ exports.signup = (req, res) => {
     });
 };
 
+exports.verifyEmail = (req, res) => {
+    jwt.verify(req.params.token, config.verifySecret, (err, decoded) => {
+        if (err) {
+            res.status(401).send(err);
+            return;
+        }
+        req.userId = decoded.id;
+        User.findById(req.userId).exec((err, user) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            user.status = true;
+            user.save(err => {
+                if (err) {
+                    return res.status(500).send(err);
+                }
+                res.status(200).send({ message: "User is activated" });
+            })
+        })
+    });
+}
+
 /**
  * Login
  *
  * @returns boolean
  * @see
  */
-
-const tokenList = {}
-
-exports.signin = (req, res) => {
+exports.signIn = (req, res) => {
     User.findOne({
         username: req.body.username
     })
         .exec((err, user) => {
             if (err) {
-                res.status(500).send({message: err});
-                return;
+                return res.status(500).send({message: err});
             }
 
             if (!user) {
                 return res.status(404).send({message: "User Not found."});
             }
 
-            var passwordIsValid = bcrypt.compareSync(
+            let passwordIsValid = bcrypt.compareSync(
                 req.body.password,
                 user.password
             );
@@ -226,12 +240,17 @@ exports.signin = (req, res) => {
             });
             User.findById(user._id).populate("role").populate("avatar")
                 .exec((err, user_callback) => {
-                user_callback.updateOne({refresh_token: refreshToken},
+                    if (err) {
+                        return res.status(500).send({message: err});
+                    }
+                    if (user_callback.status === false) {
+                        return res.status(403).send({message: "User Deactivated!"});
+                    }
+                    user_callback.updateOne({refresh_token: refreshToken},
                     [],
-                    function (err, doc) {
+                    function (err) {
                         if (err) {
-                            res.status(500).send({message: err});
-                            return;
+                            return res.status(500).send({message: err});
                         }
                         res.cookie('refreshToken', refreshToken);
                         res.status(200).send({
@@ -254,13 +273,12 @@ exports.generateForgotPwdLink = (req, res) => {
         email: req.params.email,
     }).exec((err, user) => {
         if (err) {
-            res.status(500).send({message: err});
-            return;
+            return res.status(500).send({message: err});
         }
         if (!user) {
             return res.status(404).send({message: "User Not found."});
         }
-        var token = jwt.sign({id: user.id}, config.secret, {
+        let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
             expiresIn: 86400 // 24 hours
         });
         res.status(200).send({
@@ -272,10 +290,9 @@ exports.generateForgotPwdLink = (req, res) => {
 
 exports.resetPwd = (req, res) => {
     if (req.params.token) {
-        jwt.verify(req.params.token, config.secret, (err, decoded) => {
+        jwt.verify(req.params.token, config.resetPasswordSecret, (err, decoded) => {
             if (err) {
-                res.status(401).send(err);
-                return;
+                return res.status(401).send(err);
             }
             req.userId = decoded.id;
             res.status(200).send({
@@ -284,7 +301,7 @@ exports.resetPwd = (req, res) => {
         });
     }
     else if (req.body.token) {
-        jwt.verify(req.body.token, config.secret, (err, decoded) => {
+        jwt.verify(req.body.token, config.resetPasswordSecret, (err, decoded) => {
             if (err) {
                 return res.status(401).send({ message: "Link expired!" });
             }
@@ -292,12 +309,14 @@ exports.resetPwd = (req, res) => {
         });
 
         User.findById(req.userId).exec((err, user_callback) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             user_callback.updateOne( { password: bcrypt.hashSync(req.body.password, 8) },
                 [],
-                function (err, doc){
+                function (err){
                     if (err) {
-                        res.status(500).send({message: err});
-                        return;
+                        return res.status(500).send({message: err});
                     }
                     res.status(200).send({status: "updated"})
                 });
@@ -307,19 +326,5 @@ exports.resetPwd = (req, res) => {
         return res.status(401).send({ message: "Token expired!" })
     }
 };
-
-exports.log = (req, res) => {
-    const log = new Log({
-        action: req.body.log
-    });
-    log.user.push(req.userId);
-    log.save(err => {
-        if (err) {
-            res.status(500).send({message: err});
-            return;
-        }
-        res.status(200).send({message: 'logged'});
-    });
-}
 
 
