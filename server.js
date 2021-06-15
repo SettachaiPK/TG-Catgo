@@ -81,24 +81,12 @@ const io = require("socket.io")(server, {
 io.on('connection', (socket) => {
     socket.on('join-with-id',(data) => {
         socket.join(data.user_id);
-        console.log("User: " + data.user_id + " online ");
         User.findById(data.user_id).exec((err,user) => {
             io.in(data.user_id).emit('receive-notify',
             { 
                 user_id: data.user_id,
                 notification:  user.notification
             });
-            console.log("sent notify: " + user.notification );
-            user.notification = 0;
-            user.save();
-            }
-        );
-        Notification.find({user: data.user_id}).exec((err,output) => {
-            output.forEach(function(each_output,index){
-                console.log(each_output);
-                io.in(data.user_id).emit('notify-detail', each_output);
-                });
-            Notification.deleteMany({user: data.user_id}).exec();
             }
         );
     });
@@ -108,7 +96,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log("A user disconnected");
+        // console.log("A user disconnected");
     });
 
     socket.on('send-message', (data) => {

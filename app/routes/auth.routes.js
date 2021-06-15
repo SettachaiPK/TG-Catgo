@@ -11,9 +11,11 @@ module.exports = function(app) {
     next();
   });
 
-  router.get("/companydetail_ifexist/:taxid", authController.getcompanydetail_ifexist);
+  router.get("/companydetail_ifexist/:taxid",
+      authController.checkExistCompany);
 
-  router.post("/checktaxid", authController.checktaxid);
+  router.post("/checktaxid",
+      authController.createCompany);
 
   router.post(
     "/signup",

@@ -40,5 +40,11 @@ module.exports = app => {
       userController.changePwd
   );
 
+  router.get(
+      "/notification",
+      [authJwt.verifyToken],
+      userController.showAndClearNotification
+  );
+
   app.use('/apis/user', router);
 };
