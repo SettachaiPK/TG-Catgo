@@ -168,7 +168,7 @@ exports.createJob = (req, res) => {
 // 3 > 4 notify assigned driver
 exports.selectDriver = (req, res) => {
 
-    Job.findOne({'_id': req.params.job_id, 'status': 3})
+    Job.findOne({_id: req.params.job_id, status: 3})
         .populate("driver", '-password')
         .exec((err, job_callback) => {
             if (job_callback === null) {
@@ -259,9 +259,13 @@ exports.callCommentDriver = (req,res) => {
 }
 // 0 > 1
 exports.jobMatching = (req, res) => {
-    Job.findById({_id: req.params.job_id, status: 0}).exec((err, job_callback) => {
+    Job.findOne({_id: req.params.job_id, status: 0}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
+        }
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
         }
         job_callback.flightDate = req.body.flightDate;
         job_callback.numberOfPieces = req.body.numberOfPieces;

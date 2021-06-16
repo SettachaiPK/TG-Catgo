@@ -75,6 +75,9 @@ exports.editDriverInfo = (req, res) => {
     let req_detail = JSON.parse(req.body.detail);
     User.findById(req.params.driver_id).populate('role').populate('user_detail')
         .exec((err, user) => {
+            if (user === null) {
+                return res.status(404).send({message: "User Not found."});
+            }
             user.updateOne( { "$set": updateBlock }, [], function (err){
                     if (err) {
                         return res.status(500).send({message: err});
@@ -209,9 +212,13 @@ exports.jobDriverDetail = (req,res ) => {
 }
 
 exports.changeStatus = (req, res) => {
-    Job.findById({_id: req.params.job_id}).exec((err, job_callback) => {
+    Job.findById(req.params.job_id).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
+        }
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
         }
         let new_status = job_callback.status + 1;
         job_callback.updateOne( {status: new_status}, [], function (err) {
