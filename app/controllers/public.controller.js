@@ -61,9 +61,13 @@ exports.createCommentDriver = (req,res) => {
 
 // 4 > 5 notify driver assigner and driver
 exports.receivedPackage = (req, res) => {
-    Job.findById({_id: req.params.job_id, status: 4}).exec((err, job_callback) => {
+    Job.findOne({_id: req.params.job_id, status: 4}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
+        }
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
         }
         job_callback.status = 5;
         job_callback.save((err) => {

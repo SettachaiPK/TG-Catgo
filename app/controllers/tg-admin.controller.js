@@ -27,7 +27,7 @@ exports.getAllJob = (req, res) => {
 
 // 2 > 3 notify every ff in company
 exports.jobPickUp = (req, res) => {
-    Job.findOne({"_id" : req.params.job_id, "status" : 2})
+    Job.findOne({_id : req.params.job_id, status : 2})
         .populate("driver", '-password')
         .exec((err, job_callback) => {
             if (job_callback === null) {
@@ -91,7 +91,7 @@ exports.jobPickUp = (req, res) => {
 
 
 exports.jobTgadminDetail = (req,res ) => {
-    Job.findById({_id :req.params.job_id}).populate("driver", '-password').exec((err, job_callback) => {
+    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -104,6 +104,10 @@ exports.confirmPayment = (req, res) => {
     Job.findOne({_id: req.params.job_id, status: 1}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
+        }
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
         }
         job_callback.status = 2;
         job_callback.save(err => {
