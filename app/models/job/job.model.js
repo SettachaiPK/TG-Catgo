@@ -38,5 +38,3 @@ const Job = mongoose.model(
     }, {timestamps: true}).plugin(mongoosePaginate)
 );
 module.exports = Job;
-
-
