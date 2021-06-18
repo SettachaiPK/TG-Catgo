@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const User = mongoose.model(
   "User",
@@ -33,7 +34,7 @@ const User = mongoose.model(
         }]
     ,
       refresh_token: String,
-  }, { timestamps: true })
+  }, { timestamps: true }).plugin(sanitizerPlugin)
 );
 
 module.exports = User;

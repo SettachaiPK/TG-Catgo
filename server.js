@@ -6,7 +6,6 @@ const cors = require("cors");
 const path = require('path');
 const fs = require("fs");
 const dbConfig = require("./app/config/db.config");
-
 const db = require("./app/models");
 const { user } = require("./app/models");
 const Role = db.role;
@@ -45,11 +44,6 @@ app.use(fileUpload({
 
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({extended: true}));
-
-// simple route
-app.get("/", (req, res) => {
-    res.json({message: "Welcome to TG-Cargo application."});
-});
 
 // routes
 require("./app/routes/auth.routes")(app);

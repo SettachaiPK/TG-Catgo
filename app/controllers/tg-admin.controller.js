@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
@@ -27,7 +28,7 @@ exports.getAllJob = (req, res) => {
 
 // 2 > 3 notify every ff in company
 exports.jobPickUp = (req, res) => {
-    Job.findOne({_id : req.params.job_id, status : 2})
+    Job.findOne({_id : sanitize(req.params.job_id), status : 2})
         .populate("driver", '-password')
         .exec((err, job_callback) => {
             if (job_callback === null) {
@@ -91,7 +92,7 @@ exports.jobPickUp = (req, res) => {
 
 
 exports.jobTgadminDetail = (req,res ) => {
-    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -101,7 +102,7 @@ exports.jobTgadminDetail = (req,res ) => {
 }
 //1 > 2 
 exports.confirmPayment = (req, res) => {
-    Job.findOne({_id: req.params.job_id, status: 1}).exec((err, job_callback) => {
+    Job.findOne({_id: sanitize(req.params.job_id), status: 1}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }

@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
@@ -44,7 +45,7 @@ exports.driverDetail = (req, res) => {
                 if (err) {
                     return res.status(500).send({message: err});
                 }
-                User.findOne({'_id': req.params.driver_id, 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
+                User.findOne({'_id': sanitize(req.params.driver_id), 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
                     .populate("user_detail").populate("avatar", 'value')
                     .exec((err, callback) => {
                         if (err) {
@@ -57,7 +58,7 @@ exports.driverDetail = (req, res) => {
 }
 
 exports.deleteDriver = (req,res) => {
-    Job.find({ driver:req.params.driver_id})
+    Job.find({ driver: sanitize(req.params.driver_id)})
         .exec((err, result) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -66,7 +67,7 @@ exports.deleteDriver = (req,res) => {
             res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
             return;
             }
-            User.findById(req.params.driver_id).populate("role").populate("tax_id")
+            User.findById(sanitize(req.params.driver_id)).populate("role").populate("tax_id")
                 .exec((err, user_detail) => {
                     if (err) {
                         return res.status(500).send({message: err});
@@ -116,7 +117,7 @@ exports.editDriverInfo = (req, res) => {
         }
     }
     //let req_detail = JSON.parse(req.params.detail);
-    User.findById(req.params.driver_id).populate('role').populate('user_detail').populate('avatar')
+    User.findById(sanitize(req.params.driver_id)).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -267,7 +268,7 @@ exports.createDriver = (req, res) => {
                     }
                     User.find(
                         {
-                            username: {$in: req.body.username}
+                            username: {$in: sanitize(req.body.username)}
                         },
                         (err, username_callback) => {
                             if (err) {
@@ -310,7 +311,7 @@ exports.driverJobOverview = (req,res) => {
 }
 
 exports.jobDriverDetail = (req,res ) => {
-    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -319,7 +320,7 @@ exports.jobDriverDetail = (req,res ) => {
 }
 
 exports.changeStatus = (req, res) => {
-    Job.findById(req.params.job_id).exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }

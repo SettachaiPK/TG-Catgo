@@ -1,4 +1,5 @@
 const db = require("../models");
+const sanitize = require('mongo-sanitize');
 const User = db.user;
 const User_detail = db.user_detail
 const Company = db.company;
@@ -164,7 +165,7 @@ exports.getAllCompany =  (req, res) => {
 };
 
 exports.getCompanyDetail = (req, res) => {
-    Company.findById(req.params.company_id).populate({path: 'company_detail'})
+    Company.findById(sanitize(req.params.company_id)).populate({path: 'company_detail'})
         .exec((err, company_detail) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -180,7 +181,7 @@ exports.getCompanyDetail = (req, res) => {
 }
 
 exports.updateOneCompanyDetail = (req, res) => {
-    Company_detail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
+    Company_detail.findById(sanitize(req.params.company_detail_id)).populate({path: 'tax_id'})
         .exec((err, detail) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -208,7 +209,7 @@ exports.updateOneCompanyDetail = (req, res) => {
 };
 
 exports.deleteOneUser = (req,res) => {
-    Job.find({ driver:req.body.user_id})
+    Job.find({ driver: sanitize(req.body.user_id)})
         .exec((err, result) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -217,13 +218,13 @@ exports.deleteOneUser = (req,res) => {
             res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
             return;
             }
-            User.findOne({_id: req.body.user_id }).populate("role")
+            User.findOne({_id: sanitize(req.body.user_id) }).populate("role")
                 .exec((err, user_detail) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
                     if (user_detail.role[0].name === 'driver'){
-                        Company.findById(req.params.company_id)
+                        Company.findById(sanitize(req.params.company_id))
                             .exec((err, company_callback) => {
                                 if (err) {
                                     return res.status(500).send({message: err});
@@ -254,7 +255,7 @@ exports.deleteOneUser = (req,res) => {
 }
 
 exports.viewEditUserInfo = (req, res) => {
-    User.findById(req.params.user_id).populate("user_detail")
+    User.findById(sanitize(req.params.user_id)).populate("user_detail")
         .exec((err, callback) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -282,7 +283,7 @@ exports.adminEditUserInfo = (req, res) => {
         }
     }
     let req_detail = JSON.parse(req.body.detail);
-    User.findById(req.params.user_id).populate('role').populate('user_detail').populate('avatar')
+    User.findById(sanitize(req.params.user_id)).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
                 return res.status(500).send({message: err});

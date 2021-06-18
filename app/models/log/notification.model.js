@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Notification = mongoose.model(
     "Notification",
@@ -16,7 +17,7 @@ const Notification = mongoose.model(
             }]
         ,
         detail: String,
-    })
+    }).plugin(sanitizerPlugin)
 );
 
 module.exports = Notification;

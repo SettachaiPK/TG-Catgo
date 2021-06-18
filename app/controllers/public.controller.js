@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
@@ -8,7 +9,7 @@ const Job = db.job;
 const Comment = db.comment;
 const Notification = db.notification;
 exports.createCommentDriver = (req,res) => {
-    Job.findById(req.params.job_id).exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -28,7 +29,7 @@ exports.createCommentDriver = (req,res) => {
                     return res.status(500).send({message: err});
                 }
                 // save avg rating to driver model
-                User.findById(req.body.driver_id).populate("user_detail").exec((err, driver_callback) => {
+                User.findById(sanitize(req.body.driver_id)).populate("user_detail").exec((err, driver_callback) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
@@ -61,7 +62,7 @@ exports.createCommentDriver = (req,res) => {
 
 // 4 > 5 notify driver assigner and driver
 exports.receivedPackage = (req, res) => {
-    Job.findOne({_id: req.params.job_id, status: 4}).exec((err, job_callback) => {
+    Job.findOne({_id: sanitize(req.params.job_id), status: 4}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
