@@ -147,7 +147,6 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
             });
         });
     });
-
 };
 
 exports.getAllCompany =  (req, res) => {

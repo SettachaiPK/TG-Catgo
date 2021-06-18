@@ -10,6 +10,108 @@ const Log = db.log;
 const Role = db.role;
 const Notification = db.notification;
 
+exports.jobOverview = (req, res) => {
+    Job.aggregate([{ $match: { $and: [{'status': 0}] } } ,{
+        $group : {
+            _id : null,
+            total : {
+                $sum : 1
+            }
+        }
+    }]).exec((err, job_status0) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        Job.aggregate([{ $match: { $and: [{'status': 1}] } } ,{
+            $group : {
+                _id : null,
+                total : {
+                    $sum : 1
+                }
+            }
+        }]).exec((err, job_status1) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
+            // status 2
+            Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{
+                $group : {
+                    _id : null,
+                    total : {
+                        $sum : 1
+                    }
+                }
+            }]).exec((err, job_status2) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                //status 3
+                Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{
+                    $group : {
+                        _id : null,
+                        total : {
+                            $sum : 1
+                        }
+                    }
+                }]).exec((err, job_status3) => {
+                    if (err) {
+                        return res.status(500).send({message: err});
+                    }
+                    //status 4
+                    Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{
+                        $group : {
+                            _id : null,
+                            total : {
+                                $sum : 1
+                            }
+                        }
+                    }]).exec((err, job_status4) => {
+                        if (err) {
+                            return res.status(500).send({message: err});
+                        }
+                        //status 5
+                        Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{
+                            $group : {
+                                _id : null,
+                                total : {
+                                    $sum : 1
+                                }
+                            }
+                        }]).exec((err, job_status5) => {
+                            if (err) {
+                                return res.status(500).send({message: err});
+                            }
+
+                            Company.aggregate([{
+                                $group : {
+                                    _id : null,
+                                    total : {
+                                        $sum : 1
+                                    }
+                                }
+                            }]).exec((err, company_count) => {
+                                if (err) {
+                                    return res.status(500).send({message: err});
+                                }
+                                if (err) {
+                                    return res.status(500).send({message: err});
+                                }
+                                let result = {}
+                                if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
+                                if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
+                                if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
+                                if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
+                                if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
+                                if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
+                                res.status(200).send(result)
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    });
+};
 
 exports.getAllJob = (req, res) => {
     let options = {
