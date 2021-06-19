@@ -1,18 +1,30 @@
 const config = require("../config/auth.config");
 const db = require("../models");
+const mailer = require("nodemailer");
+const sanitize = require('mongo-sanitize');
 const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
-const Log = db.log;
 
-var jwt = require("jsonwebtoken");
-var bcrypt = require("bcryptjs");
+const smtp = {
+    host: process.env.EMAILHOST, //set to your host name or ip
+    port: process.env.EMAILPORT, //25, 465, 587 depend on your 
+    secure: false, // use TLS
+    auth: {
+      user: process.env.EMAILUSER, //user account
+      pass: process.env.EMAILPASS //user password
+    }
+  };
+const smtpTransport = mailer.createTransport(smtp);
 
-exports.getcompanydetail_ifexist = (req, res) => {
-    Company.find({ tax_id: {$in: req.params.taxid} }).populate('company_detail')
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
+exports.checkExistCompany = (req, res) => {
+    Company.find({ tax_id: {$in: sanitize(req.params.taxid)} }).populate('company_detail')
         .exec((err, company_detail) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -39,11 +51,11 @@ exports.getcompanydetail_ifexist = (req, res) => {
  *
  * @see
  */
-exports.checktaxid = (req, res) => {
+exports.createCompany = (req, res) => {
   if (req.body.taxid) {
       Company.find(
         {
-            tax_id: {$in: req.body.taxid}
+            tax_id: {$in: sanitize(req.body.taxid)}
         },
         (err, taxid) => {
             if (err) {
@@ -115,7 +127,7 @@ exports.signup = (req, res) => {
             }
             user.avatar = profile_image.map(name => name._id);
         });
-        Company.find({tax_id: {$in: req.body.taxid}}, (err, tax_id_callback) => {
+        Company.find({tax_id: {$in: sanitize(req.body.taxid)}}, (err, tax_id_callback) => {
                 if (err) {
                     return res.status(500).send({message: err});
                 }
@@ -132,7 +144,7 @@ exports.signup = (req, res) => {
         );
         Role.find(
             {
-                name: {$in: req.body.roles}
+                name: {$in: sanitize(req.body.roles)}
             },
             (err, roles) => {
                 if (err) {
@@ -152,7 +164,7 @@ exports.signup = (req, res) => {
             }
             User.find(
                 {
-                    username: {$in: req.body.username}
+                    username: {$in: sanitize(req.body.username)}
                 },
                 (err, username_callback) => {
                     if (err) {
@@ -171,7 +183,21 @@ exports.signup = (req, res) => {
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
                                 expiresIn: 86400 // 24 hours
                             });
-                            res.status(200).send({ verifyLink: token });
+                            let mail = {
+                                from: process.env.EMAILFROM,
+                                to: user.email,
+                                subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
+                                html: token
+                             }
+                             smtpTransport.sendMail(mail, function(err, response){
+                                smtpTransport.close();
+                                if (err){
+                                    return res.status(500).send(err);
+                                }
+                                else {
+                                   res.status(200).send({ verifyLink: token });
+                                }
+                             });
                         });
                     });
                 },
@@ -187,7 +213,7 @@ exports.verifyEmail = (req, res) => {
             return;
         }
         req.userId = decoded.id;
-        User.findById(req.userId).exec((err, user) => {
+        User.findById(sanitize(req.userId)).exec((err, user) => {
             if (err) {
                 return res.status(500).send(err);
             }
@@ -210,7 +236,7 @@ exports.verifyEmail = (req, res) => {
  */
 exports.signIn = (req, res) => {
     User.findOne({
-        username: req.body.username
+        username: sanitize(req.body.username)
     })
         .exec((err, user) => {
             if (err) {
@@ -218,7 +244,10 @@ exports.signIn = (req, res) => {
             }
 
             if (!user) {
-                return res.status(404).send({message: "User Not found."});
+                return res.status(401).send({
+                    accessToken: null,
+                    message: "Invalid Username or Password!"
+                });
             }
 
             let passwordIsValid = bcrypt.compareSync(
@@ -229,7 +258,7 @@ exports.signIn = (req, res) => {
             if (!passwordIsValid) {
                 return res.status(401).send({
                     accessToken: null,
-                    message: "Invalid Password!"
+                    message: "Invalid Username or Password!"
                 });
             }
             const token = jwt.sign({id: user.id}, config.secret, {
@@ -238,7 +267,7 @@ exports.signIn = (req, res) => {
             const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
                 expiresIn: 86400 // 24 hours
             });
-            User.findById(user._id).populate("role").populate("avatar")
+            User.findById(sanitize(user._id)).populate("role").populate("avatar")
                 .exec((err, user_callback) => {
                     if (err) {
                         return res.status(500).send({message: err});
@@ -270,7 +299,7 @@ exports.signIn = (req, res) => {
 
 exports.generateForgotPwdLink = (req, res) => {
     User.findOne({
-        email: req.params.email,
+        email: sanitize(req.params.email),
     }).exec((err, user) => {
         if (err) {
             return res.status(500).send({message: err});
@@ -281,6 +310,22 @@ exports.generateForgotPwdLink = (req, res) => {
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
             expiresIn: 86400 // 24 hours
         });
+        let mail = {
+            from: process.env.EMAILFROM,
+            to: user.email,
+            subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
+            html: token
+         }
+         smtpTransport.sendMail(mail, function(err, response){
+            smtpTransport.close();
+            if (err){
+                return res.status(500).send(err);
+            }
+            else {
+               console.log(response);
+               res.status(200).send({ verifyLink: token });
+            }
+         });
         res.status(200).send({
             tokenForgotPwdLink: token
         });
@@ -308,7 +353,7 @@ exports.resetPwd = (req, res) => {
             req.userId = decoded.id;
         });
 
-        User.findById(req.userId).exec((err, user_callback) => {
+        User.findById(sanitize(req.userId)).exec((err, user_callback) => {
             if (err) {
                 return res.status(500).send({message: err});
             }

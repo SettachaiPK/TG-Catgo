@@ -1,10 +1,11 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const Chat = db.chat;
 const Avatar = db.profile_image;
 
 exports.chatHistory = (req, res) => {
-    Chat.find({ job: req.params.job_id }).populate({path: 'user', populate: { path: 'avatar' }}).exec((err, result) => {
+    Chat.find({ job: sanitize(req.params.job_id) }).populate({path: 'user', populate: { path: 'avatar' }}).exec((err, result) => {
         if (err) {
             res.status(500).send({message: err})
         }

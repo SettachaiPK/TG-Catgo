@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Company_detail = mongoose.model(
     "Company_detail",
@@ -13,7 +14,7 @@ const Company_detail = mongoose.model(
         ,
         company_province: String,
         company_postal: String
-    })
+    }).plugin(sanitizerPlugin)
 );
 
 module.exports = Company_detail;

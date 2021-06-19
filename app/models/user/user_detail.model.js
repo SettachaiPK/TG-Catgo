@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const User_detail = mongoose.model(
     "User_detail",
@@ -17,7 +18,7 @@ const User_detail = mongoose.model(
         province: String,
         zipcode: String,
         avg_rating: Number,
-    }, { timestamps: true })
+    }, { timestamps: true }).plugin(sanitizerPlugin)
 
 );
 

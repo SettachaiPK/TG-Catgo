@@ -1,4 +1,5 @@
 const db = require("../models");
+const sanitize = require('mongo-sanitize');
 const User = db.user;
 const User_detail = db.user_detail
 const Company = db.company;
@@ -11,122 +12,135 @@ var bcrypt = require("bcryptjs");
 const { company } = require("../models");
 
 exports.allCompaniesOverviewJobStatusCount = (req, res) => {
-    Job.aggregate([{ $match: { $and: [{'status': 1}] } } ,{
+    Job.aggregate([{ $match: { $and: [{'status': 0}] } } ,{
         $group : {
             _id : null,
             total : {
                 $sum : 1
             }
         }
-    }]).exec((err, job_status1) => {
+    }]).exec((err, job_status0) => {
         if (err) {
             return res.status(500).send({message: err});
         }
-        // status 2
-        Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{
+        Job.aggregate([{ $match: { $and: [{'status': 1}] } } ,{
             $group : {
                 _id : null,
                 total : {
                     $sum : 1
                 }
             }
-        }]).exec((err, job_status2) => {
+        }]).exec((err, job_status1) => {
             if (err) {
                 return res.status(500).send({message: err});
             }
-            //status 3
-            Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{
+            // status 2
+            Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{
                 $group : {
                     _id : null,
                     total : {
                         $sum : 1
                     }
                 }
-            }]).exec((err, job_status3) => {
+            }]).exec((err, job_status2) => {
                 if (err) {
                     return res.status(500).send({message: err});
                 }
-                //status 4
-                Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{
+                //status 3
+                Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{
                     $group : {
                         _id : null,
                         total : {
                             $sum : 1
                         }
                     }
-                }]).exec((err, job_status4) => {
+                }]).exec((err, job_status3) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
-                    //status 5
-                    Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{
+                    //status 4
+                    Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{
                         $group : {
                             _id : null,
                             total : {
                                 $sum : 1
                             }
                         }
-                    }]).exec((err, job_status5) => {
+                    }]).exec((err, job_status4) => {
                         if (err) {
                             return res.status(500).send({message: err});
                         }
-                        
-                        Company.aggregate([{
+                        //status 5
+                        Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{
                             $group : {
                                 _id : null,
                                 total : {
                                     $sum : 1
                                 }
                             }
-                        }]).exec((err, company_count) => {
+                        }]).exec((err, job_status5) => {
                             if (err) {
                                 return res.status(500).send({message: err});
                             }
-                            Role.findOne({'name':"freight-forwarder"}).exec((err,roles) => {
+
+                            Company.aggregate([{
+                                $group : {
+                                    _id : null,
+                                    total : {
+                                        $sum : 1
+                                    }
+                                }
+                            }]).exec((err, company_count) => {
                                 if (err) {
                                     return res.status(500).send({message: err});
                                 }
-                                User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
-                                    $group : {
-                                        _id : null,
-                                        total : {
-                                            $sum : 1
-                                        }
-                                    }
-                                }]).exec((err, ff_count) => {
+                                Role.findOne({'name':"freight-forwarder"}).exec((err,roles) => {
                                     if (err) {
                                         return res.status(500).send({message: err});
                                     }
-                                    
-                                    Role.findOne({'name':"driver"}).exec((err,roles) => {
+                                    User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
+                                        $group : {
+                                            _id : null,
+                                            total : {
+                                                $sum : 1
+                                            }
+                                        }
+                                    }]).exec((err, ff_count) => {
                                         if (err) {
                                             return res.status(500).send({message: err});
                                         }
-                                        User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
-                                            $group : {
-                                                _id : null,
-                                                total : {
-                                                    $sum : 1
-                                                }
-                                            }
-                                        }]).exec((err, driver_count) => {
+
+                                        Role.findOne({'name':"driver"}).exec((err,roles) => {
                                             if (err) {
                                                 return res.status(500).send({message: err});
                                             }
-                                            let result = {}
-                                            if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
-                                            if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
-                                            if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
-                                            if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
-                                            if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
-                                            if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
-                                            if (driver_count.length === 0) { result.driver_count === 0 } else { result.driver_count = driver_count[0].total }
-                                            if (company_count.length === 0) { result.company_count === 0 } else { result.company_count = company_count[0].total }
-                                            res.status(200).send(result)
-                                        });
-                                    })
-                                });
-                            })
+                                            User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
+                                                $group : {
+                                                    _id : null,
+                                                    total : {
+                                                        $sum : 1
+                                                    }
+                                                }
+                                            }]).exec((err, driver_count) => {
+                                                if (err) {
+                                                    return res.status(500).send({message: err});
+                                                }
+                                                let result = {}
+                                                if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
+                                                if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
+                                                if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
+                                                if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
+                                                if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
+                                                if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
+                                                if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
+                                                if (driver_count.length === 0) { result.driver_count === 0 } else { result.driver_count = driver_count[0].total }
+                                                if (company_count.length === 0) { result.company_count === 0 } else { result.company_count = company_count[0].total }
+                                                res.status(200).send(result)
+                                            });
+                                        })
+                                    });
+                                })
+                            });
                         });
                     });
                 });
@@ -136,16 +150,21 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
 };
 
 exports.getAllCompany =  (req, res) => {
-    Company.find().exec((err, AllCompany) => {
+    let options = {
+        page:req.query.page,
+        limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
+    };
+    Company.paginate({}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
-        res.status(200).send(AllCompany);
-    })
+        res.status(200).send(result)
+    });
 };
 
 exports.getCompanyDetail = (req, res) => {
-    Company.findById(req.params.company_id).populate({path: 'company_detail'})
+    Company.findById(sanitize(req.params.company_id)).populate({path: 'company_detail'})
         .exec((err, company_detail) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -161,7 +180,7 @@ exports.getCompanyDetail = (req, res) => {
 }
 
 exports.updateOneCompanyDetail = (req, res) => {
-    Company_detail.findById(req.params.company_detail_id).populate({path: 'tax_id'})
+    Company_detail.findById(sanitize(req.params.company_detail_id)).populate({path: 'tax_id'})
         .exec((err, detail) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -189,7 +208,7 @@ exports.updateOneCompanyDetail = (req, res) => {
 };
 
 exports.deleteOneUser = (req,res) => {
-    Job.find({ driver:req.body.user_id})
+    Job.find({ driver: sanitize(req.body.user_id)})
         .exec((err, result) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -198,13 +217,13 @@ exports.deleteOneUser = (req,res) => {
             res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
             return;
             }
-            User.findOne({_id: req.body.user_id }).populate("role")
+            User.findOne({_id: sanitize(req.body.user_id) }).populate("role")
                 .exec((err, user_detail) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
                     if (user_detail.role[0].name === 'driver'){
-                        Company.findById(req.params.company_id)
+                        Company.findById(sanitize(req.params.company_id))
                             .exec((err, company_callback) => {
                                 if (err) {
                                     return res.status(500).send({message: err});
@@ -235,7 +254,7 @@ exports.deleteOneUser = (req,res) => {
 }
 
 exports.viewEditUserInfo = (req, res) => {
-    User.findById(req.params.user_id).populate("user_detail")
+    User.findById(sanitize(req.params.user_id)).populate("user_detail")
         .exec((err, callback) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -263,7 +282,7 @@ exports.adminEditUserInfo = (req, res) => {
         }
     }
     let req_detail = JSON.parse(req.body.detail);
-    User.findById(req.params.user_id).populate('role').populate('user_detail').populate('avatar')
+    User.findById(sanitize(req.params.user_id)).populate('role').populate('user_detail').populate('avatar')
         .exec((err, user) => {
             if (err) {
                 return res.status(500).send({message: err});

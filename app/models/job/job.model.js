@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const mongoosePaginate = require('mongoose-paginate-v2');
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Job = mongoose.model(
     "Job",
@@ -35,8 +36,6 @@ const Job = mongoose.model(
                         type: mongoose.Schema.Types.ObjectId,
                         ref: "Company"
                 }],
-    }, {timestamps: true}).plugin(mongoosePaginate)
+    }, {timestamps: true}).plugin(mongoosePaginate).plugin(sanitizerPlugin)
 );
 module.exports = Job;
-
-

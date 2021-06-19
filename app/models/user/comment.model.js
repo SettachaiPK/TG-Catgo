@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Comment = mongoose.model(
     "Comment",
@@ -17,7 +18,7 @@ const Comment = mongoose.model(
         ,
         rating: Number,
         comment: String,
-    }, { timestamps: true })
+    }, { timestamps: true }).plugin(sanitizerPlugin)
 
 );
 

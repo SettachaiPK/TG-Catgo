@@ -1,14 +1,9 @@
 module.exports = {
-  secret: "TG-Cargo-secret-key"
+  secret: process.env.TOKENSECRET,
+  refreshTokenSecret: process.env.REFRESHTOKENSECRET,
+  verifySecret: process.env.VERIFYSECRET,
+  resetPasswordSecret: process.env.RESETPASSWORDSECRET,
+  port: process.env.PORT,
+  tokenLife: process.env.TOKENLIFE,
+  refreshTokenLife: process.env.REFRESHTOKENLIFE,
 };
-
-module.exports = {
-  "secret": process.env.TOKENSECRET,
-  "refreshTokenSecret": process.env.REFRESHTOKENSECRET,
-  "verifySecret": process.env.VERIFYSECRET,
-  "resetPasswordSecret": process.env.RESETPASSWORDSECRET,
-  "port": process.env.PORT,
-  "tokenLife": process.env.TOKENLIFE,
-  "refreshTokenLife": process.env.REFRESHTOKENLIFE,
-};
-

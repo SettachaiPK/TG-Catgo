@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Log = mongoose.model(
     "Log",
@@ -21,7 +22,7 @@ const Log = mongoose.model(
             default: Date.now,
             expires: 864000,
           },
-    })
+    }).plugin(sanitizerPlugin)
 );
 
 module.exports = Log;

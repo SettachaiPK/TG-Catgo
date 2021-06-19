@@ -60,6 +60,12 @@ module.exports = app => {
         driverController.editDriverInfo
     );
 
+    router.get(
+        "/tdv/delete/:driver_id",
+        [authJwt.verifyToken, authJwt.isFreightForwarder],
+        driverController.deleteDriver
+    );
+
     router.post(
         "/tdv/create",
         [verifySignUp.checkDuplicateUsernameOrEmail, authJwt.verifyToken, authJwt.isFreightForwarder],

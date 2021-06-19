@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
@@ -168,7 +169,7 @@ exports.createJob = (req, res) => {
 // 3 > 4 notify assigned driver
 exports.selectDriver = (req, res) => {
 
-    Job.findOne({'_id': req.params.job_id, 'status': 3})
+    Job.findOne({_id: sanitize(req.params.job_id), status: 3})
         .populate("driver", '-password')
         .exec((err, job_callback) => {
             if (job_callback === null) {
@@ -198,7 +199,7 @@ exports.selectDriver = (req, res) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
-                    User.findById(req.body.driver).exec((err,userDriver)=>{
+                    User.findById(sanitize(req.body.driver)).exec((err,userDriver)=>{
                         if (err) {
                             return res.status(500).send({message: err});
                         }
@@ -226,7 +227,7 @@ exports.selectDriver = (req, res) => {
 }
 
 exports.jobDetail = (req, res) => {
-    Job.findById(req.params.job_id).populate("driver", '-password').exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).populate("driver", '-password').exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -236,7 +237,7 @@ exports.jobDetail = (req, res) => {
 }
 
 exports.callCommentDriver = (req,res) => {
-    User.findById(req.params.driver_id).exec((err, driver_callback) => {
+    User.findById(sanitize(req.params.driver_id)).exec((err, driver_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -259,9 +260,13 @@ exports.callCommentDriver = (req,res) => {
 }
 // 0 > 1
 exports.jobMatching = (req, res) => {
-    Job.findById({_id: req.params.job_id, status: 0}).exec((err, job_callback) => {
+    Job.findOne({_id: sanitize(req.params.job_id), status: 0}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
+        }
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
         }
         job_callback.flightDate = req.body.flightDate;
         job_callback.numberOfPieces = req.body.numberOfPieces;

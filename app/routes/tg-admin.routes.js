@@ -13,7 +13,13 @@ module.exports = app => {
     });
 
     router.get(
-        "/",
+        "/overview",
+        [authJwt.verifyToken, authJwt.isTgAdmin],
+        tgAdminController.jobOverview
+    );
+
+    router.get(
+        "/all",
         [authJwt.verifyToken, authJwt.isTgAdmin],
         tgAdminController.getAllJob
     );

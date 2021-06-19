@@ -6,7 +6,6 @@ const cors = require("cors");
 const path = require('path');
 const fs = require("fs");
 const dbConfig = require("./app/config/db.config");
-
 const db = require("./app/models");
 const { user } = require("./app/models");
 const Role = db.role;
@@ -46,11 +45,6 @@ app.use(fileUpload({
 // parse requests of content-type - application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({extended: true}));
 
-// simple route
-app.get("/", (req, res) => {
-    res.json({message: "Welcome to TG-Cargo application."});
-});
-
 // routes
 require("./app/routes/auth.routes")(app);
 require("./app/routes/user.routes")(app);
@@ -81,24 +75,12 @@ const io = require("socket.io")(server, {
 io.on('connection', (socket) => {
     socket.on('join-with-id',(data) => {
         socket.join(data.user_id);
-        console.log("User: " + data.user_id + " online ");
         User.findById(data.user_id).exec((err,user) => {
             io.in(data.user_id).emit('receive-notify',
             { 
                 user_id: data.user_id,
                 notification:  user.notification
             });
-            console.log("sent notify: " + user.notification );
-            user.notification = 0;
-            user.save();
-            }
-        );
-        Notification.find({user: data.user_id}).exec((err,output) => {
-            output.forEach(function(each_output,index){
-                console.log(each_output);
-                io.in(data.user_id).emit('notify-detail', each_output);
-                });
-            Notification.deleteMany({user: data.user_id}).exec();
             }
         );
     });
@@ -108,7 +90,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        console.log("A user disconnected");
+        // console.log("A user disconnected");
     });
 
     socket.on('send-message', (data) => {

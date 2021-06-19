@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Company = mongoose.model(
     "Company",
@@ -11,7 +13,7 @@ const Company = mongoose.model(
         }],
         driver_count: Number,
         job_count: Number
-    })
+    }).plugin(mongoosePaginate).plugin(sanitizerPlugin)
 );
 
 module.exports = Company;

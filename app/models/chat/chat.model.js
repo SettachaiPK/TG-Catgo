@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Chat = mongoose.model(
     "Chat",
@@ -16,6 +17,6 @@ const Chat = mongoose.model(
             }]
         ,
         message: String,
-    }, { timestamps: true })
+    }, { timestamps: true }).plugin(sanitizerPlugin)
 );
 module.exports = Chat;
