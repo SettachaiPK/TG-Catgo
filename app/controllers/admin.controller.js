@@ -151,11 +151,12 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
 
 exports.getAllCompany =  (req, res) => {
     let options = {
+        populate: 'company_detail',
         page:req.query.page,
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Company.paginate({}, options, function (err, result) {
+    Company.paginate({[req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -176,6 +177,22 @@ exports.getCompanyDetail = (req, res) => {
                 }
                 res.status(200).send({user_detail, company_detail});
         })
+    });
+}
+
+exports.changeCompanyStatus = (req, res) => {
+    Company.findById(sanitize(req.params.company_id)).populate({path: 'company_detail'})
+        .exec((err, company_detail) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
+            company_detail.status = req.body.status;
+            company_detail.save(err => {
+                if (err) {
+                    return res.status(500).send({message: err})
+                }
+                res.status(200).send({message: "Company status updated"});
+            })
     });
 }
 
@@ -343,3 +360,18 @@ exports.adminEditUserInfo = (req, res) => {
                 });
         });
 }
+
+exports.adminGetAllJob = (req, res) => {
+    let options = {
+        populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }],
+        page:req.query.page,
+        limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
+    };
+    Job.paginate({'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        res.status(200).send(result)
+    });
+};

@@ -12,7 +12,8 @@ const Company = mongoose.model(
             ref: "Company_detail"
         }],
         driver_count: Number,
-        job_count: Number
+        job_count: Number,
+        status: Boolean
     }).plugin(mongoosePaginate).plugin(sanitizerPlugin)
 );
 

@@ -302,7 +302,7 @@ exports.driverJobOverview = (req,res) => {
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Job.paginate({'driver': req.userId, 'status': req.query.status}, options, function (err, result) {
+    Job.paginate({'driver': req.userId, 'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -311,7 +311,7 @@ exports.driverJobOverview = (req,res) => {
 }
 
 exports.jobDriverDetail = (req,res ) => {
-    Job.findById(sanitize(req.params.job_id)).populate("driver", '-password').exec((err, job_callback) => {
+    Job.findById(sanitize(req.params.job_id)).populate({path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }

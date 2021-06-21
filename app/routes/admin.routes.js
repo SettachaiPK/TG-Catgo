@@ -13,6 +13,12 @@ module.exports = app => {
     });
 
     router.get(
+        "/all_job",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.adminGetAllJob
+    );
+
+    router.get(
         "/company",
         [authJwt.verifyToken, authJwt.isAdmin],
         adminController.getAllCompany
@@ -34,6 +40,12 @@ module.exports = app => {
         "/company/:company_id/",
         [authJwt.verifyToken, authJwt.isAdmin],
         adminController.getCompanyDetail
+    );
+
+    router.post(
+        "/company/:company_id/change_status",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.changeCompanyStatus
     );
 
     router.post(

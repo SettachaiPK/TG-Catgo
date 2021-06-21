@@ -120,7 +120,7 @@ exports.getAllJob = (req, res) => {
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Job.paginate({'status': req.query.status}, options, function (err, result) {
+    Job.paginate({'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
