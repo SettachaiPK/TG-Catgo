@@ -14,6 +14,8 @@ exports.createCommentDriver = (req,res) => {
             return res.status(500).send({message: err});
         }
         job_callback.status = 6;
+        job_callback.comment = req.body.comment;
+        job_callback.rating = req.body.rating;
         job_callback.save(err => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -105,14 +107,25 @@ exports.receivedPackage = (req, res) => {
                                     if (err) {
                                         res.status(500).send({message: err});
                                     }
-                                    res.status(200).send({message: "Package received"})
+                                    Company.findById(job_callback.company[0]).exec((err, company_callback) => {
+                                        if (err) {
+                                            return res.status(500).send({message: err});
+                                        }
+                                        console.log(company_callback);
+                                        company_callback.job_count += 1;
+                                        company_callback.save(err => {
+                                            if (err) {
+                                                return res.status(500).send({message: err});
+                                            }
+                                            res.status(200).send({message: "Package received"})
+                                        })
+                                    })
                                 })
                             })
                         })
                     })
                 })
-            })
-            
+            }) 
         })
-    });
+    })
 }

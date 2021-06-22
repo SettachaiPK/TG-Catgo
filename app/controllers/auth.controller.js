@@ -66,7 +66,8 @@ exports.createCompany = (req, res) => {
                     tax_id: req.body.taxid,
                     company_name: req.body.name,
                     driver_count: 0,
-                    job_count: 0
+                    job_count: 0,
+                    status: true
                 });
                 company.save(err => {
                     if (err){
@@ -76,7 +77,7 @@ exports.createCompany = (req, res) => {
                         company_name: req.body.name,
                         company_province: req.body.province,
                         company_postal: req.body.postal,
-                        address: req.body.address,
+                        address: req.body.address
                     });
                     company_detail.tax_id.push(company._id);
                     company_detail.save(err => {

@@ -21,6 +21,8 @@ const Job = mongoose.model(
         confPickupTimeMinutes: { type: String, default: '-' },
         qrCode: { type: String, default: '-' },
         truckNumber: { type: String, default: '-' },
+        comment: { type: String, default: '-' },
+        rating: { type: Number, default: null },
         driverAssigner:
                 [{
                     type: mongoose.Schema.Types.ObjectId,

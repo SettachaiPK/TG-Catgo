@@ -118,7 +118,7 @@ exports.overviewAllJob = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, user) => {
-            Job.paginate({'company': user.tax_id[0]._id, 'status': req.query.status}, options, function (err, result) {
+            Job.paginate({'company': user.tax_id[0]._id, 'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" } }, options, function (err, result) {
                 if (err) {
                     return res.status(500).send({message: err});
                 }
@@ -182,6 +182,8 @@ exports.selectDriver = (req, res) => {
             if (job_callback.driver.length > 0) {
                 job_callback.driver.pop()
             }
+            job_callback.confPickupTimeHours = req.body.confPickupTimeHours;
+            job_callback.confPickupTimeMinutes = req.body.confPickupTimeMinutes;
             job_callback.truckNumber = req.body.truckNumber;
             job_callback.driver.push(req.body.driver);
             job_callback.driverAssigner.push(req.userId);
@@ -258,6 +260,7 @@ exports.callCommentDriver = (req,res) => {
         });
     });
 }
+
 // 0 > 1
 exports.jobMatching = (req, res) => {
     Job.findOne({_id: sanitize(req.params.job_id), status: 0}).exec((err, job_callback) => {
