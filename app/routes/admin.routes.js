@@ -61,7 +61,7 @@ module.exports = app => {
     );
 
     router.post(
-        "/company/:company_id/:user_id",
+        "/company/:company_id/:user_id/edit",
         [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
         adminController.adminEditUserInfo
     );
@@ -70,7 +70,19 @@ module.exports = app => {
         "/overview",
         [authJwt.verifyToken, authJwt.isAdmin],
         adminController.allCompaniesOverviewJobStatusCount
-    )
+    );
+
+    router.post(
+        "/company/:company_id/create_user",
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        adminController.adminAddUser
+    );
+
+    router.get(
+        "/log",
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        adminController.callLog
+    );
 
     app.use('/apis/admin', router);
 };

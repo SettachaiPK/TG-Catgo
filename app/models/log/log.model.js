@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
 const sanitizerPlugin = require('mongoose-sanitizer-plugin');
 
 const Log = mongoose.model(
@@ -22,7 +23,7 @@ const Log = mongoose.model(
             default: Date.now,
             expires: 864000,
           },
-    }).plugin(sanitizerPlugin)
+    }).plugin(sanitizerPlugin).plugin(mongoosePaginate)
 );
 
 module.exports = Log;

@@ -86,6 +86,7 @@ io.on('connection', (socket) => {
     });
     
     socket.on('join', (data) => {
+        console.log('join room :', data.job_id)
         socket.join(data.job_id);
     });
 

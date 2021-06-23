@@ -7,6 +7,7 @@ const Job = db.job;
 const Company_detail = db.company_detail;
 const Profile_image = db.profile_image;
 const Role = db.role;
+const Log = db.log;
 
 var bcrypt = require("bcryptjs");
 const { company } = require("../models");
@@ -405,4 +406,134 @@ exports.adminGetAllJob = (req, res) => {
         }
         res.status(200).send(result)
     });
+};
+
+exports.adminAddUser = (req, res) => {
+    const user = new User({
+        username: req.body.username,
+        password: bcrypt.hashSync(req.body.password, 8),
+        email: req.body.email,
+        status: req.body.status,
+    });
+
+    const user_detail = new User_detail({
+        phone: req.body.phone,
+        prefix: req.body.prefix,
+        firstname: req.body.firstname,
+        lastname: req.body.lastname,
+    });
+    user.save((err, user) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        if (req.files) {
+            image_data = req.files.avatar;
+            if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+                res.status(415).send({message: "wrong file type"});
+                return;
+            }
+            if(image_data.truncated){
+                res.status(413).send({message: "file too large"});
+                return;
+            }
+            new Profile_image({
+                name: user._id,
+                value: image_data.data.toString('base64')
+            }).save((err, profile_image_callback) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                user.updateOne({'avatar': profile_image_callback}, [],
+                            function (err) {
+                                if (err) {
+                                    return res.status(500).send({message: err});
+                                }
+                                console.log(user);      
+                            });       
+            });
+        }
+        else {
+            Profile_image.find({name: "default"}, (err, profile_image) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                user.avatar = profile_image.map(name => name._id);
+            });
+        }
+        Company.find({tax_id: {$in: sanitize(req.params.company_id)}}, (err, tax_id_callback) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                user.tax_id = tax_id_callback.map(tax_id => tax_id._id);
+                if (req.body.roles === 'driver') {
+                    tax_id_callback[0].driver_count += 1;
+                    tax_id_callback[0].save((err, job) => {
+                        if (err) {
+                            res.status(500).send({message: err});
+                        }
+                    });
+                }
+            }
+        );
+        Role.find(
+            {
+                name: {$in: sanitize(req.body.roles)}
+            },
+            (err, roles) => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                user.role = roles.map(role => role._id);
+                user.save(err => {
+                    if (err) {
+                        res.status(500).send({message: err});
+                    }
+                });
+            }
+        );
+        user_detail.save(err => {
+            if (err) {
+                res.status(500).send({message: err});
+            }
+            User.find(
+                {
+                    username: {$in: sanitize(req.body.username)}
+                },
+                (err, username_callback) => {
+                    if (err) {
+                        return res.status(500).send({message: err});
+                    }
+                    user_detail.username = username_callback.map(username => username._id);
+                    user_detail.save(err => {
+                        if (err) {
+                            return res.status(500).send({message: err});
+                        }
+                        user.user_detail.push(user_detail._id);
+                        user.save(err => {
+                            if (err) {
+                                return res.status(500).send({message: err});
+                            }
+                            res.status(200).send({ message: "User created successfully" });
+                        });
+                    });
+                },
+            );
+        });
+    });
+};
+
+exports.callLog = (req, res) => {
+    let options = {
+        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
+        page:req.query.page,
+        limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
+    };
+    Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        res.status(200).send(result)
+    });
+    
 };
