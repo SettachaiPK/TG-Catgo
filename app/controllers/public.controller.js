@@ -13,7 +13,6 @@ exports.createCommentDriver = (req,res) => {
         if (err) {
             return res.status(500).send({message: err});
         }
-        job_callback.status = 6;
         job_callback.comment = req.body.comment;
         job_callback.rating = req.body.rating;
         job_callback.save(err => {
