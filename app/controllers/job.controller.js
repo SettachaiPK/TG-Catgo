@@ -129,7 +129,7 @@ exports.overviewAllJob = (req, res) => {
 //0 
 exports.createJob = (req, res) => {
     const job = new Job({
-        status: 0, // Simulated TG API Matched job
+        status: 0,
         awbNumber: req.body.awbNumber,
         hwbSerialNumber: req.body.hwbSerialNumber,
         flightNumber: req.body.flightNumber,

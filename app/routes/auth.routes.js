@@ -2,6 +2,7 @@ module.exports = function(app) {
   var router = require("express").Router();
   const { verifySignUp, authJwt } = require("../middlewares");
   const authController = require("../controllers/auth.controller");
+  const path = require('path');
 
   app.use(function(req, res, next) {
     res.header(

@@ -2,12 +2,27 @@ const config = require("../config/auth.config");
 const db = require("../models");
 const mailer = require("nodemailer");
 const sanitize = require('mongo-sanitize');
+var handlebars = require('handlebars');
+const path = require('path');
+var fs = require('fs');
 const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
+
+var readHTMLFile = function(path, callback) {
+    fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
+        if (err) {
+            throw err;
+            callback(err);
+        }
+        else {
+            callback(null, html);
+        }
+    });
+};
 
 const smtp = {
     host: process.env.EMAILHOST, //set to your host name or ip
@@ -87,11 +102,11 @@ exports.createCompany = (req, res) => {
                         company.company_detail.push(company_detail._id);
                         company.save();
                     });
-                    res.send({company_exist: false});
+                    res.status(200).send({company_exist: false});
                 });
             }
             else {
-            res.send({company_exist: true});
+            res.status(400).send({company_exist: true});
             }
         })
     }
@@ -184,21 +199,56 @@ exports.signup = (req, res) => {
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
                                 expiresIn: 86400 // 24 hours
                             });
-                            let mail = {
-                                from: process.env.EMAILFROM,
-                                to: user.email,
-                                subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
-                                html: token
-                             }
-                             smtpTransport.sendMail(mail, function(err, response){
-                                smtpTransport.close();
-                                if (err){
-                                    return res.status(500).send(err);
+
+                            readHTMLFile( path.join(__dirname, '../assets/Email/index.html'), function(err, html) {
+                                var template = handlebars.compile(html)
+                                var replacements = {
+                                    verifyLink: process.env.CLIENTURL + 'auth/verifyRegister/' + token
+                                };
+                                var htmlToSend = template(replacements);
+
+                                let mail = {
+                                    from: process.env.EMAILFROM,
+                                    to: user.email,
+                                    subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
+                                    // html: token
+                                    html: htmlToSend
                                 }
-                                else {
-                                   res.status(200).send({ verifyLink: token });
-                                }
-                             });
+                                
+                                smtpTransport.sendMail(mail, function(err, response){
+                                    smtpTransport.close();
+                                    if (err){
+                                        return res.status(500).send(err);
+                                    }
+                                    else {
+                                        res.status(200).send({ verifyLink: token });
+                                    }
+                                });
+                            })
+                            // var template = handlebars.compile(htmlRespone)
+                            // var replacements = {
+                            //     tokenLike: token
+                            // };
+                            // var htmlToSend = template(replacements);
+
+                            // let mail = {
+                            //     from: process.env.EMAILFROM,
+                            //     to: user.email,
+                            //     subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
+                            //     // html: token
+                            //     html: htmlToSend
+                            //  }
+
+                            //  smtpTransport.sendMail(mail, function(err, response){
+                            //     smtpTransport.close();
+                            //     if (err){
+                            //         return res.status(500).send(err);
+                            //     }
+                            //     else {
+                            //        res.status(200).send({ verifyLink: token });
+                            //     //    res.sendFile( path.join(__dirname, '../assets/Email/index.html') )
+                            //     }
+                            //  });
                         });
                     });
                 },
