@@ -18,13 +18,13 @@ module.exports = app => {
 
     router.get(
         "/:job_id",
-        [authJwt.verifyToken, authJwt.isDriver],
+        [authJwt.verifyToken, authJwt.isDriver, authJwt.isJobBelongToDriver],
         driverController.jobDriverDetail
     );
 
     router.get(
         "/:job_id/update_status",
-        [authJwt.verifyToken, authJwt.isDriver],
+        [authJwt.verifyToken, authJwt.isDriver, authJwt.isJobBelongToDriver],
         driverController.changeStatus
     );
     app.use('/apis/driver', router);

@@ -62,7 +62,7 @@ module.exports = app => {
 
     router.post(
         "/company/:company_id/:user_id/edit",
-        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.adminEditUserCheckDuplicateUsername, verifySignUp.adminEditUserCheckDuplicateEmail],
         adminController.adminEditUserInfo
     );
 

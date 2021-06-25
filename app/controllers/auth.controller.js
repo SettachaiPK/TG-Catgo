@@ -200,7 +200,7 @@ exports.signup = (req, res) => {
                                 expiresIn: 86400 // 24 hours
                             });
 
-                            readHTMLFile( path.join(__dirname, '../assets/Email/index.html'), function(err, html) {
+                            readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
                                 var template = handlebars.compile(html)
                                 var replacements = {
                                     verifyLink: process.env.CLIENTURL + 'auth/verifyRegister/' + token
@@ -361,25 +361,55 @@ exports.generateForgotPwdLink = (req, res) => {
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
             expiresIn: 86400 // 24 hours
         });
-        let mail = {
-            from: process.env.EMAILFROM,
-            to: user.email,
-            subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
-            html: token
-         }
-         smtpTransport.sendMail(mail, function(err, response){
-            smtpTransport.close();
-            if (err){
-                return res.status(500).send(err);
-            }
-            else {
-               console.log(response);
-               res.status(200).send({ verifyLink: token });
-            }
-         });
-        res.status(200).send({
-            tokenForgotPwdLink: token
-        });
+
+        readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
+
+            var template = handlebars.compile(html)
+            var replacements = {
+                verifyLink: process.env.CLIENTURL + 'auth/forget-password/' + token
+            };
+            var htmlToSend = template(replacements);
+
+            let mail = {
+                from: process.env.EMAILFROM,
+                to: user.email,
+                subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
+                html: htmlToSend
+             }
+             smtpTransport.sendMail(mail, function(err, response){
+                smtpTransport.close();
+                if (err){
+                    return res.status(500).send(err);
+                }
+                else {
+                   console.log(response);
+                   res.status(200).send({ verifyLink: token });
+                }
+             });
+            res.status(200).send({
+                tokenForgotPwdLink: token
+            });
+        })
+
+        // let mail = {
+        //     from: process.env.EMAILFROM,
+        //     to: user.email,
+        //     subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
+        //     html: token
+        //  }
+        //  smtpTransport.sendMail(mail, function(err, response){
+        //     smtpTransport.close();
+        //     if (err){
+        //         return res.status(500).send(err);
+        //     }
+        //     else {
+        //        console.log(response);
+        //        res.status(200).send({ verifyLink: token });
+        //     }
+        //  });
+        // res.status(200).send({
+        //     tokenForgotPwdLink: token
+        // });
     });
 };
 

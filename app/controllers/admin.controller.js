@@ -285,6 +285,7 @@ exports.deleteCompany = (req, res) => {
 }
 
 exports.deleteOneUser = (req,res) => {
+    console.log(req.body.user_id);
     Job.find({ driver: sanitize(req.body.user_id)})
         .exec((err, result) => {
             if (err) {
@@ -294,12 +295,12 @@ exports.deleteOneUser = (req,res) => {
             res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
             return;
             }
-            User.findOne({_id: sanitize(req.body.user_id) }).populate("role")
+            User.findById(sanitize(req.body.user_id)).populate("role")
                 .exec((err, user_detail) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
-                    if (user_detail.role[0].name === 'driver'){
+                    if (user_detail.role.name === 'driver'){
                         Company.findById(sanitize(req.params.company_id))
                             .exec((err, company_callback) => {
                                 if (err) {
@@ -342,8 +343,8 @@ exports.viewEditUserInfo = (req, res) => {
 
 exports.adminEditUserInfo = (req, res) => {
     let updateBlock = {};
-    updateBlock['username'] = req.body.username;
-    updateBlock['email'] = req.body.email;
+    updateBlock['username'] = req.body.new_username;
+    updateBlock['email'] = req.body.new_email;
     updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
     updateBlock['status'] = req.body.status;
     let image_data = {};
