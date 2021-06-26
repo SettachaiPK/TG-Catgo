@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const QRCode = require('qrcode')
 const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
@@ -129,7 +130,7 @@ exports.overviewAllJob = (req, res) => {
 //0 
 exports.createJob = (req, res) => {
     const job = new Job({
-        status: 0, // Simulated TG API Matched job
+        status: 0,
         awbNumber: req.body.awbNumber,
         hwbSerialNumber: req.body.hwbSerialNumber,
         flightNumber: req.body.flightNumber,
@@ -160,7 +161,9 @@ exports.createJob = (req, res) => {
                         return res.status(500).send({message: err});
                     }
                 });
-                res.status(200).send({message: "Job was created successfully!"})
+                QRCode.toString(process.env.CLIENTURL + 'driver/my-job-view/' + job._id,{type:'terminal'}, function (err, url) {
+                    console.log(url)
+                  })
             });
         });
     });

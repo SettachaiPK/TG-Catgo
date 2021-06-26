@@ -35,6 +35,48 @@ checkDuplicateUsernameOrEmail = (req, res, next) => {
   });
 };
 
+adminEditUserCheckDuplicateEmail = (req, res, next) => {
+  if (req.body.old_email === req.body.new_email) {
+    next();
+  }
+  else {
+    User.findOne({
+      email: req.body.new_email
+    }).exec((err, user) => {
+      if (err) {
+        res.status(500).send({ message: err });
+        return;
+      }
+      if (user) {
+        res.status(400).send({ message: "Failed! Email is already in use!" });
+        return;
+      }
+      next();
+    });
+  }
+}
+
+adminEditUserCheckDuplicateUsername = (req, res, next) => {
+  if (req.body.old_username === req.body.new_username) {
+    next();
+  }
+  else {
+    User.findOne({
+      username: req.body.new_username
+    }).exec((err, user) => {
+      if (err) {
+        res.status(500).send({ message: err });
+        return;
+      }
+      if (user) {
+        res.status(400).send({ message: "Failed! Username is already in use!" });
+        return;
+      }
+      next();
+    });
+  }
+};
+
 checkRolesExisted = (req, res, next) => {
   if (req.body.roles) {
     for (let i = 0; i < req.body.roles.length; i++) {
@@ -46,12 +88,13 @@ checkRolesExisted = (req, res, next) => {
       }
     }
   }
-
   next();
 };
 
 const verifySignUp = {
   checkDuplicateUsernameOrEmail,
+  adminEditUserCheckDuplicateUsername,
+  adminEditUserCheckDuplicateEmail,
 };
 
 module.exports = verifySignUp;
