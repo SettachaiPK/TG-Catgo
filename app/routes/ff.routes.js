@@ -32,7 +32,7 @@ module.exports = app => {
 
     router.get(
         "/jrq/:job_id",
-        [authJwt.verifyToken, authJwt.isFreightForwarder],
+        [authJwt.verifyToken, authJwt.isFreightForwarder, authJwt.isJobBelongToCompany],
         jobController.jobDetail
     );
 

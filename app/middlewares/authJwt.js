@@ -1,7 +1,10 @@
 const jwt = require("jsonwebtoken");
+const sanitize = require('mongo-sanitize');
 const config = require("../config/auth.config.js");
 const db = require("../models");
 const User = db.user;
+const Job = db.job
+const Company = db.company;
 
 /** Check token by get access token first.
  * Then return the confirm message.
@@ -210,6 +213,39 @@ isDriver = (req, res, next) => {
         });
 };
 
+isJobBelongToDriver = (req, res, next) => {
+    Job.findById(sanitize(req.params.job_id)).populate('driver').exec((err, job_callback) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        if ((job_callback.driver[0]._id).toString() === req.userId) {
+            next();
+        }
+        else {
+            res.status(403).send({message: "You don't have permission to view this job!"});
+        }
+    })
+}
+
+isJobBelongToCompany = (req, res, next) => {
+    Job.findById(sanitize(req.params.job_id)).populate('company').exec((err, job_callback) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        User.findById(sanitize(req.userId)).populate('tax_id').exec((err, user_callback) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
+            if (job_callback.company[0].equals(user_callback.tax_id[0])) {
+                next();
+            }
+            else {
+                res.status(403).send({message: "You don't have permission to view this job!"});
+            }
+        })
+    })
+}
+
 const authJwt = {
     verifyToken,
     isTgAdmin,
@@ -220,6 +256,8 @@ const authJwt = {
     isAdmin,
     isFreightForwarder,
     isDriver,
+    isJobBelongToDriver,
+    isJobBelongToCompany
 };
 
 module.exports = authJwt;

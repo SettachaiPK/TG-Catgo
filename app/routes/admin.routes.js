@@ -42,10 +42,10 @@ module.exports = app => {
         adminController.getCompanyDetail
     );
 
-    router.post(
-        "/company/:company_id/change_status",
+    router.get(
+        "/company/:company_id/delete",
         [authJwt.verifyToken, authJwt.isAdmin],
-        adminController.changeCompanyStatus
+        adminController.deleteCompany
     );
 
     router.post(
@@ -61,8 +61,8 @@ module.exports = app => {
     );
 
     router.post(
-        "/company/:company_id/:user_id",
-        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        "/company/:company_id/:user_id/edit",
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.adminEditUserCheckDuplicateUsername, verifySignUp.adminEditUserCheckDuplicateEmail],
         adminController.adminEditUserInfo
     );
 
@@ -70,7 +70,31 @@ module.exports = app => {
         "/overview",
         [authJwt.verifyToken, authJwt.isAdmin],
         adminController.allCompaniesOverviewJobStatusCount
-    )
+    );
+
+    router.post(
+        "/company/:company_id/create_user",
+        [authJwt.verifyToken, authJwt.isAdmin, verifySignUp.checkDuplicateUsernameOrEmail],
+        adminController.adminAddUser
+    );
+
+    router.get(
+        "/log",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.callLog
+    );
+
+    router.post(
+        "/company/create",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.adminCreateCompany
+    );
+
+    router.post(
+        "/all_job/create",
+        [authJwt.verifyToken, authJwt.isAdmin],
+        adminController.adminCreateJob
+    );
 
     app.use('/apis/admin', router);
 };
