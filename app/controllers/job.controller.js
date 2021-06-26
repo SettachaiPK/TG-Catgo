@@ -118,6 +118,9 @@ exports.overviewAllJob = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
         .exec((err, user) => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
             Job.paginate({'company': user.tax_id[0]._id, 'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" } }, options, function (err, result) {
                 if (err) {
                     return res.status(500).send({message: err});

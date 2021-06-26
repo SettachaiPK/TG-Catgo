@@ -150,13 +150,15 @@ exports.allCompaniesOverviewJobStatusCount = (req, res) => {
 };
 
 exports.getAllCompany =  (req, res) => {
+    var isTrueSet = (req.query.status === 'true');
+    console.log(isTrueSet);
     let options = {
         populate: 'company_detail',
         page:req.query.page,
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Company.paginate({[req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
+    Company.paginate({[req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }, status: isTrueSet}, options, function (err, result) {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -170,7 +172,7 @@ exports.getCompanyDetail = (req, res) => {
             if (err) {
                 return res.status(500).send({message: err});
             }
-            User.find({"tax_id": company_detail._id})
+            User.find({"tax_id": company_detail._id}).populate('role')
             .exec((err, user_detail) => {
                 if (err) {
                     return res.status(500).send({message: err});

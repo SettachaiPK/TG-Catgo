@@ -182,7 +182,7 @@ exports.signup = (req, res) => {
                                 return res.status(500).send({message: err});
                             }
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                expiresIn: 86400 // 24 hours
+                                expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
                             });
                             let mail = {
                                 from: process.env.EMAILFROM,
@@ -263,10 +263,10 @@ exports.signIn = (req, res) => {
                 });
             }
             const token = jwt.sign({id: user.id}, config.secret, {
-                expiresIn: 86400 // 300 // 5 minutes
+                expiresIn: 86400 // process.env.TOKENLIFE
             });
             const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-                expiresIn: 86400 // 24 hours
+                expiresIn: process.env.REFRESHTOKENLIFE
             });
             User.findById(sanitize(user._id)).populate("role").populate("avatar")
                 .exec((err, user_callback) => {
@@ -309,7 +309,7 @@ exports.generateForgotPwdLink = (req, res) => {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            expiresIn: 86400 // 24 hours
+            expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
         });
         let mail = {
             from: process.env.EMAILFROM,
