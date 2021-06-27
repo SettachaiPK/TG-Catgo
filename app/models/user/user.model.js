@@ -21,13 +21,13 @@ const User = mongoose.model(
               ref: "Role"
           }]
       ,
-    tax_id:
+      tax_id:
         [{
             type: mongoose.Schema.Types.ObjectId,
             ref: "Company"
         }]
     ,
-    user_detail:
+      user_detail:
         [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User_detail"

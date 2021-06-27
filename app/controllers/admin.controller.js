@@ -172,7 +172,7 @@ exports.getAllCompany =  (req, res) => {
             page:req.query.page,
             limit:req.query.limit,
             sort:{ [req.query.sort_by]: [req.query.order] },
-        };                                                      
+        };
         Company.paginate({[req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }, status: { $in: [status1, status2] }}, options, function (err, result) {
             if (err) {
                 return res.status(500).send({message: err});
@@ -219,16 +219,16 @@ exports.updateOneCompanyDetail = (req, res) => {
             if (err) {
                 return res.status(500).send({message: err});
             }
-            detail.tax_id[0].updateOne( { 
+            detail.tax_id[0].updateOne( {
                 company_name: req.body.company_name,
-                status: req.body.status 
+                status: req.body.status
             },
             [],
             function (err){
                 if (err) {
                     return res.status(500).send({message: err});
                 }
-                detail.updateOne( { 
+                detail.updateOne( {
                     company_name: req.body.company_name,
                     address: req.body.address,
                     company_province: req.body.province,
@@ -490,7 +490,7 @@ exports.adminAddUser = (req, res) => {
                                     if (err) {
                                         return res.status(500).send({message: err});
                                     }
-                                });       
+                                });
                 });
             }
             else {
