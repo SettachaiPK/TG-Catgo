@@ -2,9 +2,9 @@ const config = require("../config/auth.config");
 const db = require("../models");
 const mailer = require("nodemailer");
 const sanitize = require('mongo-sanitize');
-var handlebars = require('handlebars');
+const handlebars = require('handlebars');
 const path = require('path');
-var fs = require('fs');
+const fs = require('fs');
 const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
@@ -12,7 +12,7 @@ const Company = db.company;
 const Role = db.role;
 const Profile_image = db.profile_image;
 
-var readHTMLFile = function(path, callback) {
+let readHTMLFile = function(path, callback) {
     fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
         if (err) {
             throw err;
@@ -102,7 +102,7 @@ exports.createCompany = (req, res) => {
                         company.company_detail.push(company_detail._id);
                         company.save();
                     });
-                    res.status(200).send({company_exist: false});
+                    res.status(200).send({message: "Company created"});
                 });
             }
             else {
@@ -197,16 +197,16 @@ exports.signup = (req, res) => {
                                 return res.status(500).send({message: err});
                             }
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                // expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
-                                expiresIn: 86400
+                                expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
+                                // expiresIn: 86400
                             });
 
                             readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
-                                var template = handlebars.compile(html)
-                                var replacements = {
+                                let template = handlebars.compile(html)
+                                let replacements = {
                                     verifyLink: process.env.CLIENTURL + 'auth/verifyRegister/' + token
                                 };
-                                var htmlToSend = template(replacements);
+                                let htmlToSend = template(replacements);
 
                                 let mail = {
                                     from: process.env.EMAILFROM,
@@ -226,30 +226,6 @@ exports.signup = (req, res) => {
                                     }
                                 });
                             })
-                            // var template = handlebars.compile(htmlRespone)
-                            // var replacements = {
-                            //     tokenLike: token
-                            // };
-                            // var htmlToSend = template(replacements);
-
-                            // let mail = {
-                            //     from: process.env.EMAILFROM,
-                            //     to: user.email,
-                            //     subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
-                            //     // html: token
-                            //     html: htmlToSend
-                            //  }
-
-                            //  smtpTransport.sendMail(mail, function(err, response){
-                            //     smtpTransport.close();
-                            //     if (err){
-                            //         return res.status(500).send(err);
-                            //     }
-                            //     else {
-                            //        res.status(200).send({ verifyLink: token });
-                            //     //    res.sendFile( path.join(__dirname, '../assets/Email/index.html') )
-                            //     }
-                            //  });
                         });
                     });
                 },
@@ -360,17 +336,17 @@ exports.generateForgotPwdLink = (req, res) => {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            // expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
-            expiresIn: 86400
+            expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
+            // expiresIn: 86400
         });
 
         readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
 
-            var template = handlebars.compile(html)
-            var replacements = {
+            let template = handlebars.compile(html)
+            let replacements = {
                 verifyLink: process.env.CLIENTURL + 'auth/forget-password/' + token
             };
-            var htmlToSend = template(replacements);
+            let htmlToSend = template(replacements);
 
             let mail = {
                 from: process.env.EMAILFROM,
@@ -392,26 +368,6 @@ exports.generateForgotPwdLink = (req, res) => {
                 tokenForgotPwdLink: token
             });
         })
-
-        // let mail = {
-        //     from: process.env.EMAILFROM,
-        //     to: user.email,
-        //     subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
-        //     html: token
-        //  }
-        //  smtpTransport.sendMail(mail, function(err, response){
-        //     smtpTransport.close();
-        //     if (err){
-        //         return res.status(500).send(err);
-        //     }
-        //     else {
-        //        console.log(response);
-        //        res.status(200).send({ verifyLink: token });
-        //     }
-        //  });
-        // res.status(200).send({
-        //     tokenForgotPwdLink: token
-        // });
     });
 };
 
@@ -446,7 +402,7 @@ exports.resetPwd = (req, res) => {
                     if (err) {
                         return res.status(500).send({message: err});
                     }
-                    res.status(200).send({status: "updated"})
+                    res.status(200).send({message: "updated"})
                 });
         });
     }

@@ -8,7 +8,7 @@ const Role = db.role;
 const Profile_image = db.profile_image;
 const Notification = db.notification;
 
-var bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 
 exports.userDetail = (req, res) => {
     User.findById(req.userId)
@@ -151,7 +151,7 @@ exports.updateOneCompanyDetail = (req, res) => {
                                     if (err) {
                                         return res.status(500).send({message: err});
                                     }
-                                    res.status(200).send({status: "updated"})
+                                    res.status(200).send({message: "updated"})
                                 });
                         });
                     })
@@ -176,11 +176,11 @@ exports.changePwd = (req, res) => {
                                 if (err) {
                                     return res.status(500).send({message: err});
                                 }
-                                res.status(200).send({status: "updated"});
+                                res.status(200).send({message: "updated"});
                             });
                     }
                     else if (result === false) {
-                        res.status(401).send({status: "Your old password are not correct"});
+                        res.status(401).send({message: "Your old password are not correct"});
                     }
                 }
             });
