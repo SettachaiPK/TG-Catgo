@@ -95,7 +95,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('send-message', (data) => {
-        console.log(data);
         User.findById(data.user_id)
         .populate('avatar')
         .exec((err, result) => {
@@ -104,7 +103,7 @@ io.on('connection', (socket) => {
                 user_id: data.user_id,
                 message: data.message,
                 job_id: data.job_id,
-                createAt: data.createAt,
+                createdAt: new Date(data.createdAt),
                 avatar: result.avatar[0].value,
                 username: result.username
             });

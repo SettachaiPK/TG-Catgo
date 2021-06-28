@@ -9,7 +9,7 @@ const Profile_image = db.profile_image;
 const Role = db.role;
 const Log = db.log;
 
-var bcrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 const { company } = require("../models");
 
 exports.allCompaniesOverviewJobStatusCount = (req, res) => {
@@ -173,12 +173,22 @@ exports.getAllCompany =  (req, res) => {
             limit:req.query.limit,
             sort:{ [req.query.sort_by]: [req.query.order] },
         };
-        Company.paginate({[req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }, status: { $in: [status1, status2] }}, options, function (err, result) {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            res.status(200).send(result);
-        });
+        if (req.query.search) {
+            Company.paginate({status: { $in: [status1, status2] }, "company_name":{ "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                res.status(200).send(result);
+            });
+        }
+        else {
+            Company.paginate({status: { $in: [status1, status2] }}, options, function (err, result) {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                res.status(200).send(result);
+            });
+        }
     }
     else if (received_status === 'none') {
         res.status(200).send({
@@ -241,7 +251,7 @@ exports.updateOneCompanyDetail = (req, res) => {
                             return res.status(500).send({message: err});
                         }
 
-                        res.status(200).send({status: "updated"})
+                        res.status(200).send({message: "updated"})
                     });
             });
     });
@@ -325,7 +335,7 @@ exports.deleteOneUser = (req,res) => {
                         if (err) {
                             return res.status(500).send({message: err});
                         }
-                        res.status(200).send({status:"Successful deletion"});
+                        res.status(200).send({message:"Successful deletion"});
                     });
             });
     });
@@ -428,12 +438,56 @@ exports.adminGetAllJob = (req, res) => {
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
     };
-    Job.paginate({'status': req.query.status, [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
-        if (err) {
-            return res.status(500).send({message: err});
+    if (req.query.search) {
+        function dateToEpoch(thedate) {
+            let time = thedate.getTime();
+            return time - (time % 86400000);
         }
-        res.status(200).send(result)
-    });
+        let date_input = dateToEpoch(new Date(req.query.search)) + 86400000 - 1
+        let date_input_24hr = dateToEpoch(new Date(req.query.search)) + (86400000 * 2) - 1
+        if (isNaN(date_input) || isNaN(date_input_24hr)) {
+            date_input = 0;
+            date_input_24hr = 0;
+        }
+        let hr_search = ""
+        let min_search = ""
+        if (req.query.search.includes(":")){
+            hr_search = parseInt(((req.query.search).substr(0, (req.query.search).indexOf(':')))).toString()
+            min_search = parseInt(((req.query.search).substr(3, (req.query.search).indexOf(':')))).toString()
+        }
+        Job.paginate({'status': req.query.status,
+        $or:[
+            {"awbNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"flightNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"hwbSerialNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"customsEntryNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"numberOfPieces":{ "$regex": req.query.search, "$options": "i" }},
+            {"dockNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"truckNumber":{ "$regex": req.query.search, "$options": "i" }},
+            {"customsEntryNumberDate":{ $gt: date_input, $lt: date_input_24hr }},
+            {"flightDate":{ $gt: date_input, $lt: date_input_24hr }},
+            {$and:[
+                {"pickupTimeHours": hr_search},
+                {"pickupTimeMinutes": min_search}
+            ]}
+        ]
+    }, options, function (err, result) {
+            if (err) {
+                console.log(err)
+                return res.status(500).send({message: err});
+            }
+            res.status(200).send(result)
+        });
+    }
+    else {
+        Job.paginate({'status': req.query.status}, options, function (err, result) {
+            if (err) {
+                console.log(err)
+                return res.status(500).send({message: err});
+            }
+            res.status(200).send(result)
+        });
+    }
 };
 
 exports.adminAddUser = (req, res) => {
