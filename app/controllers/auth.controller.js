@@ -197,7 +197,8 @@ exports.signup = (req, res) => {
                                 return res.status(500).send({message: err});
                             }
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
+                                // expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
+                                expiresIn: 86400
                             });
 
                             readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
@@ -359,7 +360,8 @@ exports.generateForgotPwdLink = (req, res) => {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
+            // expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
+            expiresIn: 86400
         });
 
         readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
