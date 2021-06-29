@@ -347,10 +347,7 @@ exports.adminAddUser = (req, res) => {
                     user.avatar = profile_image.map(name => name._id);
                 });
             }
-            Role.find(
-                {
-                    name: {$in: sanitize(req.body.roles)}
-                },
+            Role.find({name: {$in: sanitize(req.body.roles)} },
                 (err, roles) => {
                     if (err) {
                         return res.status(500).send({message: err});
@@ -367,10 +364,7 @@ exports.adminAddUser = (req, res) => {
                 if (err) {
                     res.status(500).send({message: err});
                 }
-                User.find(
-                    {
-                        username: {$in: sanitize(req.body.username)}
-                    },
+                User.find({ username: {$in: sanitize(req.body.username)}},
                     (err, username_callback) => {
                         if (err) {
                             return res.status(500).send({message: err});
@@ -423,45 +417,9 @@ exports.adminCreateCompany = async (req, res) => {
             res.status(400).send({company_exist: true});
         }
     } 
-    catch {
+    catch (err) {
         return res.status(500).send({message: err});
     }
-
-
-    Company.findOne({ tax_id: {$in: sanitize(req.body.taxid)} }).exec((err,company_callback) => {
-        if (company_callback === null) {
-            const company = new Company({
-                tax_id: req.body.taxid,
-                company_name: req.body.name,
-                driver_count: 0,
-                job_count: 0,
-                status: req.body.status
-            });
-            company.save(err => {
-                if (err){
-                    return res.status(500).send({message: err});
-                }
-                const company_detail = new Company_detail({
-                    company_name: req.body.name,
-                    company_province: req.body.province,
-                    company_postal: req.body.postal,
-                    address: req.body.address
-                });
-                company_detail.tax_id.push(company._id);
-                company_detail.save(err => {
-                    if (err){
-                        return res.status(500).send({message: err});
-                    }
-                    company.company_detail.push(company_detail._id);
-                    company.save();
-                });
-                res.status(200).send({message: "Company created"});
-            });
-        }
-        else {
-            res.status(400).send({company_exist: true});
-        }
-    })
 }
 
 exports.adminCreateJob = async (req, res) => {
@@ -497,17 +455,18 @@ exports.adminCreateJob = async (req, res) => {
     }
 }
 
-exports.callLog = (req, res) => {
-    let options = {
-        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
-        page:req.query.page,
-        limit:req.query.limit,
-        sort:{ [req.query.sort_by]: [req.query.order] },
-    };
-    Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
+exports.callLog = async (req, res) => {
+    try {
+        let options = {
+            populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
+            page:req.query.page,
+            limit:req.query.limit,
+            sort:{ [req.query.sort_by]: [req.query.order] },
+        };
+        const result = await Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options)
         res.status(200).send(result)
-    });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };

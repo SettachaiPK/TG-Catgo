@@ -11,174 +11,99 @@ const Job = db.job;
 
 const bcrypt = require("bcryptjs");
 
-exports.overviewAllDriver = (req, res) => {
-    User.findById(req.userId)
-        .populate('tax_id')
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            Role.findOne({'name': 'driver'}).exec((err, driver) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                User.find({'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
-                    .populate("user_detail").populate('avatar')
-                    .exec((err, callback) => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send(callback)
-                });
-            })
-        });
-}
-
-exports.driverDetail = (req, res) => {
-    User.findById(req.userId)
-        .populate('tax_id')
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            Role.findOne({'name': 'driver'}).exec((err, driver) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                User.findOne({'_id': sanitize(req.params.driver_id), 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
-                    .populate("user_detail").populate("avatar", 'value')
-                    .exec((err, callback) => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send(callback)
-                    });
-            })
-        });
-}
-
-exports.deleteDriver = (req,res) => {
-    Job.find({ driver: sanitize(req.params.driver_id)})
-        .exec((err, result) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            if (result.length > 0) {
-            res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
-            return;
-            }
-            User.findById(sanitize(req.params.driver_id)).populate("role").populate("tax_id")
-                .exec((err, user_detail) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    if (user_detail.role[0].name === 'driver'){
-                        Company.findById(user_detail.tax_id[0]._id)
-                            .exec((err, company_callback) => {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                                company_callback.driver_count -= 1;
-                                company_callback.save(err => {
-                                    if (err) {
-                                        res.status(500).send({message: err});
-                                    }
-                                })
-                            });
-                    }
-                });
-            User_detail.deleteOne({ username: req.params.driver_id }).
-            exec(err => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                User.deleteOne({ _id: req.params.driver_id })
-                    .exec(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send({message:"Successful deletion"});
-                    });
-            });
-    });
-}
-
-exports.editDriverInfo = (req, res) => {
-    let image_data = {};
-    if(req.files) {
-        image_data = req.files.avatar;
-        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
-            res.status(415).send({message: "wrong file type"});
-            return;
-        }
-        if(image_data.truncated){
-            res.status(413).send({message: "file too large"});
-            return;
-        }
+exports.overviewAllDriver = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).populate('tax_id')
+        const driver = await Role.findOne({'name': 'driver'})
+        const result = await User.find({'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password').populate("user_detail").populate('avatar')
+        res.status(200).send(result)
     }
-    //let req_detail = JSON.parse(req.params.detail);
-    User.findById(sanitize(req.params.driver_id)).populate('role').populate('user_detail').populate('avatar')
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.driverDetail = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).populate('tax_id')
+        const driver = await Role.findOne({'name': 'driver'})
+        const result = await User.findOne({'_id': sanitize(req.params.driver_id), 'tax_id': user.tax_id[0]._id, 'role': driver._id},'-password')
+            .populate("user_detail").populate("avatar", 'value')
+        res.status(200).send(result)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.deleteDriver = async (req,res) => {
+    try {
+        const result = await Job.find({ driver: sanitize(req.params.driver_id)})
+        if (result.length > 0) {
+            return res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
+        }
+        const user_detail = await User.findById(sanitize(req.params.driver_id)).populate("role").populate("tax_id")
+        if (user_detail.role[0].name === 'driver') {
+            const company_callback = await Company.findById(user_detail.tax_id[0]._id)
+            company_callback.driver_count -= 1;
+            await company_callback.save()
+        }
+        await User_detail.deleteOne({ username: req.params.driver_id })
+        await User.deleteOne({ _id: req.params.driver_id })
+        res.status(200).send({message:"Successful deletion"});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.editDriverInfo = async (req, res) => {
+    try {
+        let image_data = {};
+        if(req.files) {
+            image_data = req.files.avatar;
+            if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+                res.status(415).send({message: "wrong file type"});
+                return;
             }
-            user.status = req.body.status;
-            user.save(err => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-            })
-            if(req.files) {
-                Profile_image.find({name: "default"}, ((err, docs) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    // user doesn't have profile image
-                    if (user.avatar[0]._id.equals(docs[0]._id)) {
-                        new Profile_image({
-                            name: user._id,
-                            value: image_data.data.toString('base64')
-                        }).save((err, result) => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            user.updateOne({'avatar': result}, [],
-                                function (err) {
-                                    if (err) {
-                                        return res.status(500).send({message: err});
-                                    }
-                                });
-                        });
-                    }
-                    // user has profile image
-                    else {
-                        user.avatar[0].updateOne({value: image_data.data.toString('base64')},
-                            [],
-                            function (err) {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                            })
-                    }
-                }));
+            if(image_data.truncated){
+                res.status(413).send({message: "file too large"});
+                return;
             }
-            user.user_detail[0].updateOne( { 
+        }
+        const user = await User.findById(sanitize(req.params.driver_id)).populate('role').populate('user_detail').populate('avatar')
+        user.status = req.body.status;
+        await user.save()
+        if(req.files) {
+            const docs = await Profile_image.find({name: "default"})
+            // user doesn't have profile image
+            if (user.avatar[0]._id.equals(docs[0]._id)) {
+                const avatar = new Profile_image({
+                    name: user._id,
+                    value: image_data.data.toString('base64')
+                })
+                await avatar.save()
+                await user.updateOne({'avatar': result}, [])
+            }
+            // user has profile image
+            else {
+                await user.avatar[0].updateOne({value: image_data.data.toString('base64')}, [])
+            }
+        }
+        await user.user_detail[0].updateOne( {
                 prefix: req.body.prefix,
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 phone: req.body.phone,
                 address: req.body.address,
                 province: req.body.province,
-                zipcode: req.body.zipcode, 
-            },
-                [],
-                function (err){
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    res.status(200).send({message: "updated"})
-                });
-        });
+                zipcode: req.body.zipcode,
+            }, [])
+        res.status(200).send({message: "updated"})
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
 exports.createDriver = (req, res) => {
@@ -351,13 +276,14 @@ exports.driverJobOverview = (req,res) => {
     }
 }
 
-exports.jobDriverDetail = (req,res ) => {
-    Job.findById(sanitize(req.params.job_id)).populate({path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }).exec((err, job_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        res.status(200).send(job_callback)
-    });
+exports.jobDriverDetail = async (req, res) => {
+    try {
+        const job = await Job.findById(sanitize(req.params.job_id)).populate({path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } })
+        res.status(200).send(job)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
 exports.changeStatus = (req, res) => {
