@@ -78,5 +78,10 @@ module.exports = app => {
         jobController.callCommentDriver
     );
 
+    router.post(
+        "/jrq/:job_id/comment",
+        jobController.createCommentDriver
+    );
+
     app.use('/apis/ff', router);
 };

@@ -684,7 +684,7 @@ exports.adminCreateJob = (req, res) => {
 
 exports.callLog = (req, res) => {
     let options = {
-        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
+        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } },{ path: 'user', populate: 'avatar' }],
         page:req.query.page,
         limit:req.query.limit,
         sort:{ [req.query.sort_by]: [req.query.order] },
