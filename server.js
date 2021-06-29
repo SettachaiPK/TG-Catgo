@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload');
@@ -8,12 +9,17 @@ const fs = require("fs");
 const dbConfig = require("./app/config/db.config");
 const db = require("./app/models");
 const { user } = require("./app/models");
+const migrations = require("./migrations/migrations");
 const Role = db.role;
 const Profile_image = db.profile_image;
 const Chat = db.chat;
 const User = db.user;
 const Notification = db.notification;
+
 const app = express();
+
+//enable helmet security
+app.use(helmet());
 
 //enable dotenv
 require('dotenv').config()
@@ -21,15 +27,18 @@ require('dotenv').config()
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
-var corsOptions = {
-    origin: process.env.CLIENTURL
-};
+
 
 // define root path
 const root = path.dirname(require.main.filename);
 
-// app.use(cors(corsOptions));
-app.use(cors()); // remove corsOptions to allow all origins
+const corsOptions = {
+    origin: /localhost:8080$/, // น้ำตาจะไหล ลืมใส่ regex
+    credentials: true,
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  }
+
+app.use(cors(corsOptions)); 
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
@@ -84,6 +93,11 @@ io.on('connection', (socket) => {
             }
         );
     });
+    socket.on('sent-realtime-notify' , (data) =>{        
+        socket.to(data.user_id).emit('get-count-notify',{
+            detail: data.content
+          });
+    });
     
     socket.on('join', (data) => {
         console.log('join room :', data.job_id)
@@ -124,115 +138,11 @@ db.mongoose.connect(process.env.DB, {
     })
     .then(() => {
         console.log("Successfully connect to MongoDB.");
-        initial();
+        migrations.initial();
     })
     .catch(err => {
         console.error("Connection error", err);
         process.exit();
     });
-
-function initial() {
-    Profile_image.estimatedDocumentCount((err, count) => {
-        if (!err && count === 0) {
-            fs.readFile(root + '/default_image.txt', 'utf8', function(err, data) {
-                if (err) throw err;
-                new Profile_image({
-                    name: "default",
-                    value: data
-                }).save(err => {
-                    if (err) {
-                        console.log("error", err);
-                    }
-                    console.log("added default profile image to default collection");
-                });
-            });
-        }
-    });
-    Role.estimatedDocumentCount((err, count) => {
-        if (!err && count === 0) {
-
-            new Role({
-                name: "tg-admin"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'tg-admin' to roles collection");
-            });
-
-            new Role({
-                name: "tg-admin-office"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'tg-admin-office' to roles collection");
-            });
-
-            new Role({
-                name: "tg-admin-finance"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'tg-admin-finance' to roles collection");
-            });
-
-            new Role({
-                name: "tg-admin-package"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'tg-admin-package' to roles collection");
-            });
-
-            new Role({
-                name: "tg-admin-deliver"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'tg-admin-deliver)' to roles collection");
-            });
-
-            new Role({
-                name: "admin"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'admin' to roles collection");
-            });
-
-            new Role({
-                name: "freight-forwarder"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'freight-forwarder' to roles collection");
-            });
-
-            new Role({
-                name: "driver"
-            }).save(err => {
-                if (err) {
-                    console.log("error", err);
-                }
-
-                console.log("added 'driver' to roles collection");
-            });
-
-        }
-    });
-}
 
 module.exports = app;

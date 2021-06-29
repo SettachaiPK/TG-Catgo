@@ -1,4 +1,5 @@
 const config = require("../config/auth.config");
+const sanitize = require('mongo-sanitize');
 const db = require("../models");
 const User = db.user;
 const User_detail = db.user_detail;
@@ -159,7 +160,6 @@ exports.updateOneCompanyDetail = (req, res) => {
         });
 }
 exports.changePwd = (req, res) => {
-
         User.findById(req.userId).exec((err, user_callback) => {
             if (err) {
                 return res.status(500).send({message: err});
@@ -187,24 +187,25 @@ exports.changePwd = (req, res) => {
         });
 };
 
-exports.showAndClearNotification = (req, res) => {
-    User.findOne({_id: req.userId}).exec((err, user) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        user.notification = 0;
-        user.save(err => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-        })
-    });
-    Notification.find({user: req.userId}).exec((err,output) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        res.status(200).send(output);
-        Notification.deleteMany({user: req.userId}).exec();
-        }
-    );
+exports.showNotification = async (req, res) => {
+    try {
+        const notification = await Notification.find({user: req.userId})
+        res.status(200).send(notification);
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.selectAndRemoveNotification = async (req, res) => {
+    try {
+        const user = await User.findOne({_id: req.userId})
+        user.notification -= 1;
+        user.save();
+        const noti = await Notification.deleteOne({ _id: sanitize(req.body.notification_id)})
+        res.status(200).send({message: "notification cleard"});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }

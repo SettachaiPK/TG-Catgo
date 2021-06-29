@@ -43,8 +43,14 @@ module.exports = app => {
   router.get(
       "/notification",
       [authJwt.verifyToken],
-      userController.showAndClearNotification
+      userController.showNotification
   );
+
+  router.post(
+    "/notification/remove",
+    [authJwt.verifyToken],
+    userController.selectAndRemoveNotification
+);
 
   app.use('/apis/user', router);
 };

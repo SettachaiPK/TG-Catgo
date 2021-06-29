@@ -11,8 +11,8 @@ const Company = mongoose.model(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Company_detail"
         }],
-        driver_count: Number,
-        job_count: Number,
+        driver_count: { type: Number, default: 0 },
+        job_count: { type: Number, default: 0 },
         status: Boolean
     }).plugin(mongoosePaginate).plugin(sanitizerPlugin)
 );

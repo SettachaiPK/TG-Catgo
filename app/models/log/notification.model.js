@@ -17,7 +17,7 @@ const Notification = mongoose.model(
             }]
         ,
         detail: String,
-    }).plugin(sanitizerPlugin)
+    }, {timestamps: true}).plugin(sanitizerPlugin)
 );
 
 module.exports = Notification;

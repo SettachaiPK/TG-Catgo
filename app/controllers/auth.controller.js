@@ -3,6 +3,8 @@ const db = require("../models");
 const mailer = require("nodemailer");
 const sanitize = require('mongo-sanitize');
 const handlebars = require('handlebars');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const path = require('path');
 const fs = require('fs');
 const User = db.user;
@@ -34,9 +36,6 @@ const smtp = {
     }
   };
 const smtpTransport = mailer.createTransport(smtp);
-
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 
 exports.checkExistCompany = (req, res) => {
     Company.find({ tax_id: {$in: sanitize(req.params.taxid)} }).populate('company_detail')
@@ -197,8 +196,7 @@ exports.signup = (req, res) => {
                                 return res.status(500).send({message: err});
                             }
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
-                                // expiresIn: 86400
+                                expiresIn: process.env.VERIFYEMAILTOKENLIFE
                             });
 
                             readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
@@ -212,7 +210,6 @@ exports.signup = (req, res) => {
                                     from: process.env.EMAILFROM,
                                     to: user.email,
                                     subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
-                                    // html: token
                                     html: htmlToSend
                                 }
                                 
@@ -290,10 +287,10 @@ exports.signIn = (req, res) => {
                 });
             }
             const token = jwt.sign({id: user.id}, config.secret, {
-                expiresIn: 86400 // process.env.TOKENLIFE
+                expiresIn: 86400 //process.env.TOKENLIFE
             });
             const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-                expiresIn: process.env.REFRESHTOKENLIFE
+                expiresIn: 86400 //process.env.REFRESHTOKENLIFE
             });
             User.findById(sanitize(user._id)).populate("role").populate("avatar")
                 .exec((err, user_callback) => {
@@ -314,6 +311,7 @@ exports.signIn = (req, res) => {
                             id: user._id,
                             username: user.username,
                             accessToken: token,
+                            refreshToken: refreshToken,
                             email: user.email,
                             role: user_callback.role[0].name,
                             avatar: user_callback.avatar[0].value,
@@ -336,8 +334,7 @@ exports.generateForgotPwdLink = (req, res) => {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
-            // expiresIn: 86400
+            expiresIn: process.env.RESETPASSWORDTOKENLIFE
         });
 
         readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
@@ -410,5 +407,3 @@ exports.resetPwd = (req, res) => {
         return res.status(401).send({ message: "Token expired!" })
     }
 };
-
-
