@@ -420,9 +420,8 @@ exports.adminCreateCompany = async (req, res) => {
             res.status(200).send({message: "Company created"});
         }
         else {
-
+            res.status(400).send({company_exist: true});
         }
-
     } 
     catch {
         return res.status(500).send({message: err});
