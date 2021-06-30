@@ -78,7 +78,6 @@ const io = require("socket.io")(server, {
         credentials: false
     }
   });
-
 //listen on every connection
 io.on('connection', (socket) => {
     socket.on('join-with-id',(data) => {
@@ -92,10 +91,20 @@ io.on('connection', (socket) => {
             }
         );
     });
-    socket.on('sent-realtime-notify' , (data) =>{        
-        socket.to(data.user_id).emit('get-count-notify',{
-            detail: data.content
-          });
+    socket.on('sent-realtime-notify' , (data) =>{
+        Notification.findById(data.user_id)
+        .exec( (err, noti) => {
+            console.log(typeof data.user_id);
+            socket.to(data.user_id).emit('get-count-notify',{
+                createdAt: Date.now(),
+                detail: data.content,
+                id: data.id,
+            });
+        })
+
+        // socket.to(data.user_id).emit('get-count-notify',{
+        //     detail: data.content
+        //   });
     });
     
     socket.on('join', (data) => {

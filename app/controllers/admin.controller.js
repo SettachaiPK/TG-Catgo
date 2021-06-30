@@ -128,8 +128,8 @@ exports.deleteCompany = async (req, res) => {
         const company = await Company.findById(sanitize(req.params.company_id))
         const job = await Job.deleteMany({company: company})
         const users = await User.find( {tax_id: company} )
-        users.forEach((item, index) => {
-            User_detail.deleteOne({ _id: item.user_detail}).exec()
+        users.forEach(async (item, index) => {
+            await User_detail.deleteOne({ _id: item.user_detail})
         })
         const user = await User.deleteMany( {tax_id: company} )
         await Company.deleteOne({ _id: sanitize(req.params.company_id)})
@@ -455,29 +455,15 @@ exports.adminCreateJob = async (req, res) => {
     }
 }
 
-<<<<<<< HEAD
-exports.callLog = (req, res) => {
-    let options = {
-        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } },{ path: 'user', populate: 'avatar' }],
-        page:req.query.page,
-        limit:req.query.limit,
-        sort:{ [req.query.sort_by]: [req.query.order] },
-    };
-    Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-=======
 exports.callLog = async (req, res) => {
     try {
         let options = {
-            populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
+            populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: { path: 'username', populate: 'avatar' }} }],
             page:req.query.page,
             limit:req.query.limit,
             sort:{ [req.query.sort_by]: [req.query.order] },
         };
         const result = await Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options)
->>>>>>> master
         res.status(200).send(result)
     }
     catch (err) {
