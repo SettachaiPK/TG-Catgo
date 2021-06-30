@@ -12,481 +12,273 @@ const Log = db.log;
 const bcrypt = require("bcryptjs");
 const { company } = require("../models");
 
-exports.allCompaniesOverviewJobStatusCount = (req, res) => {
-    Job.aggregate([{ $match: { $and: [{'status': 0}] } } ,{
-        $group : {
-            _id : null,
-            total : {
-                $sum : 1
-            }
-        }
-    }]).exec((err, job_status0) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        Job.aggregate([{ $match: { $and: [{'status': 1}] } } ,{
-            $group : {
-                _id : null,
-                total : {
-                    $sum : 1
-                }
-            }
-        }]).exec((err, job_status1) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            // status 2
-            Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{
-                $group : {
-                    _id : null,
-                    total : {
-                        $sum : 1
-                    }
-                }
-            }]).exec((err, job_status2) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                //status 3
-                Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{
-                    $group : {
-                        _id : null,
-                        total : {
-                            $sum : 1
-                        }
-                    }
-                }]).exec((err, job_status3) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    //status 4
-                    Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{
-                        $group : {
-                            _id : null,
-                            total : {
-                                $sum : 1
-                            }
-                        }
-                    }]).exec((err, job_status4) => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        //status 5
-                        Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{
-                            $group : {
-                                _id : null,
-                                total : {
-                                    $sum : 1
-                                }
-                            }
-                        }]).exec((err, job_status5) => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-
-                            Company.aggregate([{
-                                $group : {
-                                    _id : null,
-                                    total : {
-                                        $sum : 1
-                                    }
-                                }
-                            }]).exec((err, company_count) => {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                                Role.findOne({'name':"freight-forwarder"}).exec((err,roles) => {
-                                    if (err) {
-                                        return res.status(500).send({message: err});
-                                    }
-                                    User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
-                                        $group : {
-                                            _id : null,
-                                            total : {
-                                                $sum : 1
-                                            }
-                                        }
-                                    }]).exec((err, ff_count) => {
-                                        if (err) {
-                                            return res.status(500).send({message: err});
-                                        }
-
-                                        Role.findOne({'name':"driver"}).exec((err,roles) => {
-                                            if (err) {
-                                                return res.status(500).send({message: err});
-                                            }
-                                            User.aggregate([{ $match: { $and: [{'role': roles._id}] } } ,{
-                                                $group : {
-                                                    _id : null,
-                                                    total : {
-                                                        $sum : 1
-                                                    }
-                                                }
-                                            }]).exec((err, driver_count) => {
-                                                if (err) {
-                                                    return res.status(500).send({message: err});
-                                                }
-                                                let result = {}
-                                                if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
-                                                if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
-                                                if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
-                                                if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
-                                                if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
-                                                if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
-                                                if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
-                                                if (driver_count.length === 0) { result.driver_count === 0 } else { result.driver_count = driver_count[0].total }
-                                                if (company_count.length === 0) { result.company_count === 0 } else { result.company_count = company_count[0].total }
-                                                res.status(200).send(result)
-                                            });
-                                        })
-                                    });
-                                })
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    });
+exports.allCompaniesOverviewJobStatusCount = async (req, res) => {
+    try {
+        let result = {}
+        const job_status0 = await Job.aggregate([{ $match: { $and: [{'status': 0}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const job_status1 = await Job.aggregate([{ $match: { $and: [{'status': 1}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const job_status2 = await Job.aggregate([{ $match: { $and: [{'status': 2}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const job_status3 = await Job.aggregate([{ $match: { $and: [{'status': 3}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const job_status4 = await Job.aggregate([{ $match: { $and: [{'status': 4}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const job_status5 = await Job.aggregate([{ $match: { $and: [{'status': 5}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const company_count = await Company.aggregate([{ $group : { _id : null, total : { $sum : 1 }}}])
+        const roles_ff = await Role.findOne({'name':"freight-forwarder"})
+        const ff_count = await User.aggregate([{ $match: { $and: [{'role': roles_ff._id}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        const roles_driver = await Role.findOne({'name':"driver"})
+        const driver_count = await User.aggregate([{ $match: { $and: [{'role': roles_driver._id}] } } ,{ $group : { _id : null, total : { $sum : 1 }}}])
+        if (ff_count.length === 0) { result.ff_count === 0 } else { result.ff_count = ff_count[0].total }
+        if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
+        if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
+        if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
+        if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
+        if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
+        if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
+        if (driver_count.length === 0) { result.driver_count === 0 } else { result.driver_count = driver_count[0].total }
+        if (company_count.length === 0) { result.company_count === 0 } else { result.company_count = company_count[0].total }
+        res.status(200).send(result)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };
 
-exports.getAllCompany =  (req, res) => {
-    let status1 = null;
-    let status2 = null;
-    const received_status = req.query.status;
-    if (received_status !== 'none') {
-        if (received_status === 'true') {
-            status1 = true;
-            status2 = true;
+exports.getAllCompany =  async (req, res) => {
+    try {
+        let status1 = null;
+        let status2 = null;
+        const received_status = req.query.status;
+        if (received_status !== 'none') {
+            if (received_status === 'true') {
+                status1 = true;
+                status2 = true;
+            }
+            else if (received_status === 'false') {
+                status1 = false;
+                status2 = false;
+            }
+            else if (received_status === 'all') {
+                status1 = true;
+                status2 = false;
+            }
+            let options = {
+                populate: 'company_detail',
+                page:req.query.page,
+                limit:req.query.limit,
+                sort:{ [req.query.sort_by]: [req.query.order] },
+            };
+            if (req.query.search) {
+                const result = await Company.paginate({status: { $in: [status1, status2] }, "company_name":{ "$regex": req.query.search, "$options": "i" }}, options)
+                res.status(200).send(result);
+            }
+            else {
+                const result = await Company.paginate({status: { $in: [status1, status2] }}, options)
+                res.status(200).send(result);
+            }
         }
-        else if (received_status === 'false') {
-            status1 = false;
-            status2 = false;
+        else if (received_status === 'none') {
+            res.status(200).send({
+                "docs": [],
+                "totalDocs": 0,
+                "limit": req.query.limit,
+                "totalPages": 1,
+                "page": 1,
+                "pagingCounter": 1,
+                "hasPrevPage": false,
+                "hasNextPage": false,
+                "prevPage": null,
+                "nextPage": null
+            });
         }
-        else if (received_status === 'all') {
-            status1 = true;
-            status2 = false;
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+};
+
+exports.getCompanyDetail = async (req, res) => {
+    try {
+        const company_detail = await Company.findById(sanitize(req.params.company_id)).populate({path: 'company_detail'})
+        const user_detail = await User.find({"tax_id": company_detail._id}).select(['-password', '-refresh_token']).populate('role').populate('avatar').populate('user_detail')
+        res.status(200).send({user_detail, company_detail});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.updateOneCompanyDetail = async (req, res) => {
+    try {
+        const detail = await Company_detail.findById(sanitize(req.params.company_detail_id)).populate({path: 'tax_id'})
+        await detail.tax_id[0].updateOne( { company_name: req.body.company_name, status: req.body.status }, [])
+        await detail.updateOne( {
+            company_name: req.body.company_name,
+            address: req.body.address,
+            company_province: req.body.province,
+            company_postal: req.body.postal,
+            }, [])
+        res.status(200).send({message: "updated"})
+    }
+    catch {
+        return res.status(500).send({message: err});
+    }
+};
+
+exports.deleteCompany = async (req, res) => {
+    try {
+        const company = await Company.findById(sanitize(req.params.company_id))
+        const job = await Job.deleteMany({company: company})
+        const users = await User.find( {tax_id: company} )
+        users.forEach((item, index) => {
+            User_detail.deleteOne({ _id: item.user_detail}).exec()
+        })
+        const user = await User.deleteMany( {tax_id: company} )
+        await Company.deleteOne({ _id: sanitize(req.params.company_id)})
+        res.status(200).send({
+            message: company.company_name + " removed",
+            job_delete: job.deletedCount,
+            user_delete: user.deletedCount
+        });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.deleteOneUser = async (req,res) => {
+    try {
+        const result = await Job.find({ driver: sanitize(req.body.user_id)})
+        if (result.length > 0) {
+            res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
+            return;
         }
+        const user_detail = await User.findById(sanitize(req.body.user_id)).populate("role")
+        if (user_detail.role.name === 'driver'){
+            const company_callback = await Company.findById(sanitize(req.params.company_id))
+            company_callback.driver_count -= 1;
+            await company_callback.save()
+        }
+        await User_detail.deleteOne({ username: req.body.user_id })
+        await User.deleteOne({ _id: req.body.user_id })
+        res.status(200).send({message:"Successful deletion"});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.viewEditUserInfo = async (req, res) => {
+    try {
+        const user = await User.findById(sanitize(req.params.user_id)).populate("user_detail")
+        res.status(200).send(user)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.adminEditUserInfo = async (req, res) => {
+    try {
+        let updateBlock = {};
+        updateBlock['username'] = req.body.new_username;
+        updateBlock['email'] = req.body.new_email;
+        updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
+        updateBlock['status'] = req.body.status;
+        let image_data = {};
+        if(req.files) {
+            image_data = req.files.avatar;
+            if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
+                res.status(415).send({message: "wrong file type"});
+                return;
+            }
+            if(image_data.truncated){
+                res.status(413).send({message: "file too large"});
+                return;
+            }
+        }
+        const user = await User.findById(sanitize(req.params.user_id)).populate('role').populate('user_detail').populate('avatar')
+        if (req.files) {
+            const docs = await Profile_image.find({name: "default"})
+            // user doesn't have profile image
+            if (user.avatar[0]._id.equals(docs[0]._id)) {
+                const profile = new Profile_image({
+                    name: user._id,
+                    value: image_data.data.toString('base64')
+                })
+                await profile.save()
+                user.updateOne({'avatar': result}, [])
+            }
+            // user has profile image
+            else {
+                await user.avatar[0].updateOne({value: image_data.data.toString('base64')}, [])
+            }
+        }
+        await user.updateOne( { "$set": updateBlock }, [])
+        await user.user_detail[0].updateOne( { prefix: req.body.prefix,
+            firstname: req.body.firstname,
+            lastname: req.body.lastname,
+            phone: req.body.phone ,
+            address: req.body.address,
+            province: req.body.province,
+            zipcode: req.body.zipcode,
+        },[])
+        res.status(200).send({message: "updated"})
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.adminGetAllJob = async (req, res) => {
+    try {
+        console.log("am in")
         let options = {
-            populate: 'company_detail',
+            populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }],
             page:req.query.page,
             limit:req.query.limit,
             sort:{ [req.query.sort_by]: [req.query.order] },
         };
         if (req.query.search) {
-            Company.paginate({status: { $in: [status1, status2] }, "company_name":{ "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                res.status(200).send(result);
-            });
+            function dateToEpoch(thedate) {
+                let time = thedate.getTime();
+                return time - (time % 86400000);
+            }
+            let date_input = dateToEpoch(new Date(req.query.search)) + 86400000 - 1
+            let date_input_24hr = dateToEpoch(new Date(req.query.search)) + (86400000 * 2) - 1
+            if (isNaN(date_input) || isNaN(date_input_24hr)) {
+                date_input = 0;
+                date_input_24hr = 0;
+            }
+            let hr_search = ""
+            let min_search = ""
+            if (req.query.search.includes(":")){
+                hr_search = parseInt(((req.query.search).substr(0, (req.query.search).indexOf(':')))).toString()
+                min_search = parseInt(((req.query.search).substr(3, (req.query.search).indexOf(':')))).toString()
+            }
+            const result = await Job.paginate({'status': req.query.status,
+                $or:[
+                    {"awbNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"flightNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"hwbSerialNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"customsEntryNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"numberOfPieces":{ "$regex": req.query.search, "$options": "i" }},
+                    {"dockNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"truckNumber":{ "$regex": req.query.search, "$options": "i" }},
+                    {"customsEntryNumberDate":{ $gt: date_input, $lt: date_input_24hr }},
+                    {"flightDate":{ $gt: date_input, $lt: date_input_24hr }},
+                    {$and:[
+                        {"pickupTimeHours": hr_search},
+                        {"pickupTimeMinutes": min_search}
+                    ]}]}, options)
+            res.status(200).send(result)
         }
         else {
-            Company.paginate({status: { $in: [status1, status2] }}, options, function (err, result) {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                res.status(200).send(result);
-            });
-        }
-    }
-    else if (received_status === 'none') {
-        res.status(200).send({
-            "docs": [],
-            "totalDocs": 0,
-            "limit": req.query.limit,
-            "totalPages": 1,
-            "page": 1,
-            "pagingCounter": 1,
-            "hasPrevPage": false,
-            "hasNextPage": false,
-            "prevPage": null,
-            "nextPage": null
-        });
-    }
-};
-
-exports.getCompanyDetail = (req, res) => {
-    Company.findById(sanitize(req.params.company_id)).populate({path: 'company_detail'})
-        .exec((err, company_detail) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            User.find({"tax_id": company_detail._id}).select(['-password', '-refresh_token']).populate('role').populate('avatar').populate('user_detail')
-            .exec((err, user_detail) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                res.status(200).send({user_detail, company_detail});
-        })
-    });
-}
-
-exports.updateOneCompanyDetail = (req, res) => {
-    Company_detail.findById(sanitize(req.params.company_detail_id)).populate({path: 'tax_id'})
-        .exec((err, detail) => {
-            console.log(detail)
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            detail.tax_id[0].updateOne( {
-                company_name: req.body.company_name,
-                status: req.body.status
-            },
-            [],
-            function (err){
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                detail.updateOne( {
-                    company_name: req.body.company_name,
-                    address: req.body.address,
-                    company_province: req.body.province,
-                    company_postal: req.body.postal,
-
-                    },
-                    [],
-                    function (err){
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-
-                        res.status(200).send({message: "updated"})
-                    });
-            });
-    });
-};
-
-exports.deleteCompany = (req, res) => {
-    Company.findById(sanitize(req.params.company_id)).exec((err, company_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        Job.deleteMany({company: company_callback}).exec((err, job_callback) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            User.find( {tax_id: company_callback} ).exec((err, user_callback) => {
-                user_callback.forEach((item, index) => {
-                    User_detail.deleteOne({ _id: item.user_detail}).exec(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                    })
-                })
-                User.deleteMany( {tax_id: company_callback} ).exec((err, user_callback) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    Company.deleteOne({ _id: sanitize(req.params.company_id)}).exec(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send({
-                            message: company_callback.company_name + " removed",
-                            job_delete: job_callback.deletedCount,
-                            user_delete: user_callback.deletedCount
-                        });
-                    })
-                })
-            })
-        })
-    })
-}
-
-exports.deleteOneUser = (req,res) => {
-    console.log(req.body.user_id);
-    Job.find({ driver: sanitize(req.body.user_id)})
-        .exec((err, result) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            if (result.length > 0) {
-            res.status(418).send({message: "Can't delete. This driver has a job that doesn't complete"});
-            return;
-            }
-            User.findById(sanitize(req.body.user_id)).populate("role")
-                .exec((err, user_detail) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    if (user_detail.role.name === 'driver'){
-                        Company.findById(sanitize(req.params.company_id))
-                            .exec((err, company_callback) => {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                                company_callback.driver_count -= 1;
-                                company_callback.save(err => {
-                                    if (err) {
-                                        res.status(500).send({message: err});
-                                    }
-                                })
-                            });
-                    }
-                });
-            User_detail.deleteOne({ username: req.body.user_id }).
-            exec(err => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                User.deleteOne({ _id: req.body.user_id })
-                    .exec(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send({message:"Successful deletion"});
-                    });
-            });
-    });
-}
-
-exports.viewEditUserInfo = (req, res) => {
-    User.findById(sanitize(req.params.user_id)).populate("user_detail")
-        .exec((err, callback) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            res.status(200).send(callback)
-    });
-}
-
-exports.adminEditUserInfo = (req, res) => {
-    let updateBlock = {};
-    updateBlock['username'] = req.body.new_username;
-    updateBlock['email'] = req.body.new_email;
-    updateBlock['password'] = bcrypt.hashSync(req.body.password, 8);
-    updateBlock['status'] = req.body.status;
-    let image_data = {};
-    if(req.files) {
-        image_data = req.files.avatar;
-        if(!image_data.name.match(/\.(jpg|jpeg|png)$/i)) {
-            res.status(415).send({message: "wrong file type"});
-            return;
-        }
-        if(image_data.truncated){
-            res.status(413).send({message: "file too large"});
-            return;
-        }
-    }
-    User.findById(sanitize(req.params.user_id)).populate('role').populate('user_detail').populate('avatar')
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            if (req.files) {
-                Profile_image.find({name: "default"}, ((err, docs) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    // user doesn't have profile image
-                    if (user.avatar[0]._id.equals(docs[0]._id)) {
-                        new Profile_image({
-                            name: user._id,
-                            value: image_data.data.toString('base64')
-                        }).save((err, result) => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            user.updateOne({'avatar': result}, [],
-                                function (err) {
-                                    if (err) {
-                                        return res.status(500).send({message: err});
-                                    }
-                                });
-                        });
-                    }
-                    // user has profile image
-                    else {
-                        user.avatar[0].updateOne({value: image_data.data.toString('base64')},
-                            [],
-                            function (err) {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                            })
-                    }
-                }));
-            }
-            user.updateOne( { "$set": updateBlock }, [], function (err){
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    user.user_detail[0].updateOne( { prefix: req.body.prefix,
-                            firstname: req.body.firstname,
-                            lastname: req.body.lastname,
-                            phone: req.body.phone ,
-                            address: req.body.address,
-                            province: req.body.province,
-                            zipcode: req.body.zipcode,
-                        },
-                        [],
-                        function (err){
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            res.status(200).send({message: "updated"})
-                        });
-                });
-        });
-}
-
-exports.adminGetAllJob = (req, res) => {
-    let options = {
-        populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }],
-        page:req.query.page,
-        limit:req.query.limit,
-        sort:{ [req.query.sort_by]: [req.query.order] },
-    };
-    if (req.query.search) {
-        function dateToEpoch(thedate) {
-            let time = thedate.getTime();
-            return time - (time % 86400000);
-        }
-        let date_input = dateToEpoch(new Date(req.query.search)) + 86400000 - 1
-        let date_input_24hr = dateToEpoch(new Date(req.query.search)) + (86400000 * 2) - 1
-        if (isNaN(date_input) || isNaN(date_input_24hr)) {
-            date_input = 0;
-            date_input_24hr = 0;
-        }
-        let hr_search = ""
-        let min_search = ""
-        if (req.query.search.includes(":")){
-            hr_search = parseInt(((req.query.search).substr(0, (req.query.search).indexOf(':')))).toString()
-            min_search = parseInt(((req.query.search).substr(3, (req.query.search).indexOf(':')))).toString()
-        }
-        Job.paginate({'status': req.query.status,
-        $or:[
-            {"awbNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"flightNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"hwbSerialNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"customsEntryNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"numberOfPieces":{ "$regex": req.query.search, "$options": "i" }},
-            {"dockNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"truckNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"customsEntryNumberDate":{ $gt: date_input, $lt: date_input_24hr }},
-            {"flightDate":{ $gt: date_input, $lt: date_input_24hr }},
-            {$and:[
-                {"pickupTimeHours": hr_search},
-                {"pickupTimeMinutes": min_search}
-            ]}
-        ]
-    }, options, function (err, result) {
-            if (err) {
-                console.log(err)
-                return res.status(500).send({message: err});
-            }
+            const result = await Job.paginate({'status': req.query.status}, options)
             res.status(200).send(result)
-        });
+        }
     }
-    else {
-        Job.paginate({'status': req.query.status}, options, function (err, result) {
-            if (err) {
-                console.log(err)
-                return res.status(500).send({message: err});
-            }
-            res.status(200).send(result)
-        });
+    catch (err) {
+        return res.status(500).send({message: err});
+
     }
 };
 
@@ -555,10 +347,7 @@ exports.adminAddUser = (req, res) => {
                     user.avatar = profile_image.map(name => name._id);
                 });
             }
-            Role.find(
-                {
-                    name: {$in: sanitize(req.body.roles)}
-                },
+            Role.find({name: {$in: sanitize(req.body.roles)} },
                 (err, roles) => {
                     if (err) {
                         return res.status(500).send({message: err});
@@ -575,10 +364,7 @@ exports.adminAddUser = (req, res) => {
                 if (err) {
                     res.status(500).send({message: err});
                 }
-                User.find(
-                    {
-                        username: {$in: sanitize(req.body.username)}
-                    },
+                User.find({ username: {$in: sanitize(req.body.username)}},
                     (err, username_callback) => {
                         if (err) {
                             return res.status(500).send({message: err});
@@ -593,7 +379,7 @@ exports.adminAddUser = (req, res) => {
                                 if (err) {
                                     return res.status(500).send({message: err});
                                 }
-                                res.status(200).send({ message: "User created successfully" });
+                                res.status(200).send({ id: user._id });
                             });
                         });
                     },
@@ -603,8 +389,9 @@ exports.adminAddUser = (req, res) => {
     });
 };
 
-exports.adminCreateCompany = (req, res) => {
-    Company.findOne({ tax_id: {$in: sanitize(req.body.taxid)} }).exec((err,company_callback) => {
+exports.adminCreateCompany = async (req, res) => {
+    try {
+        const company_callback = await Company.findOne({ tax_id: {$in: sanitize(req.body.taxid)} });
         if (company_callback === null) {
             const company = new Company({
                 tax_id: req.body.taxid,
@@ -613,36 +400,31 @@ exports.adminCreateCompany = (req, res) => {
                 job_count: 0,
                 status: req.body.status
             });
-            company.save(err => {
-                if (err){
-                    return res.status(500).send({message: err});
-                }
-                const company_detail = new Company_detail({
-                    company_name: req.body.name,
-                    company_province: req.body.province,
-                    company_postal: req.body.postal,
-                    address: req.body.address
-                });
-                company_detail.tax_id.push(company._id);
-                company_detail.save(err => {
-                    if (err){
-                        return res.status(500).send({message: err});
-                    }
-                    company.company_detail.push(company_detail._id);
-                    company.save();
-                });
-                res.status(200).send({message: "Company created"});
+            await company.save();
+            const company_detail = new Company_detail({
+                company_name: req.body.name,
+                company_province: req.body.province,
+                company_postal: req.body.postal,
+                address: req.body.address
             });
+            company_detail.tax_id.push(company._id);
+            await company_detail.save();
+            company.company_detail.push(company_detail._id);
+            await company.save();
+            res.status(200).send({message: "Company created"});
         }
         else {
             res.status(400).send({company_exist: true});
         }
-    })
+    } 
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
-exports.adminCreateJob = (req, res) => {
-    Company.findOne({ tax_id: {$in: sanitize(req.body.taxid)} }).exec((err, company_callback) => {
-        console.log(company_callback);
+exports.adminCreateJob = async (req, res) => {
+    try {
+        const company_callback = await Company.findOne({ tax_id: {$in: sanitize(req.body.taxid)} })
         if (company_callback !== null) {
             const job = new Job({
                 status: 0,
@@ -654,34 +436,26 @@ exports.adminCreateJob = (req, res) => {
                 customsEntryNumberDate: req.body.customsEntryNumberDate,
                 company: company_callback
             });
-            job.save(err => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                User.findById(req.userId).exec((err, user) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    const log = new Log({
-                        action: "Create job"
-                    });
-                    log.user.push(req.userId);
-                    log.job.push(job._id);
-                    log.save(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send({message: "Job was created successfully!"})
-                    });
-                });
+            await job.save()
+            const user = await User.findById(req.userId)
+            const log = new Log({
+                action: "Create job"
             });
+            log.user.push(req.userId);
+            log.job.push(job._id);
+            await log.save()
+            res.status(200).send({message: "Job was created successfully!"})
         }
         else {
             res.status(500).send({company_exist: false});
         }
-    })
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
+<<<<<<< HEAD
 exports.callLog = (req, res) => {
     let options = {
         populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } },{ path: 'user', populate: 'avatar' }],
@@ -693,6 +467,20 @@ exports.callLog = (req, res) => {
         if (err) {
             return res.status(500).send({message: err});
         }
+=======
+exports.callLog = async (req, res) => {
+    try {
+        let options = {
+            populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } }],
+            page:req.query.page,
+            limit:req.query.limit,
+            sort:{ [req.query.sort_by]: [req.query.order] },
+        };
+        const result = await Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options)
+>>>>>>> master
         res.status(200).send(result)
-    });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };

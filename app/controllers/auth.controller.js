@@ -3,6 +3,8 @@ const db = require("../models");
 const mailer = require("nodemailer");
 const sanitize = require('mongo-sanitize');
 const handlebars = require('handlebars');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 const path = require('path');
 const fs = require('fs');
 const User = db.user;
@@ -35,24 +37,21 @@ const smtp = {
   };
 const smtpTransport = mailer.createTransport(smtp);
 
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-
-exports.checkExistCompany = (req, res) => {
-    Company.find({ tax_id: {$in: sanitize(req.params.taxid)} }).populate('company_detail')
-        .exec((err, company_detail) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            if (company_detail.length === 0) {
-                res.send({company_exist: false});
-                return
-            }
-            res.status(200).send({
-                company_exist: true,
-                company_detail: company_detail[0].company_detail[0]
-            });
-    });
+exports.checkExistCompany = async (req, res) => {
+    try {
+        const company_detail = await Company.find({ tax_id: {$in: sanitize(req.params.taxid)} }).populate('company_detail')
+        if (company_detail.length === 0) {
+            res.send({company_exist: false});
+            return;
+        }
+        res.status(200).send({
+            company_exist: true,
+            company_detail: company_detail[0].company_detail[0]
+        });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
 /**
@@ -66,16 +65,10 @@ exports.checkExistCompany = (req, res) => {
  *
  * @see
  */
-exports.createCompany = (req, res) => {
-  if (req.body.taxid) {
-      Company.find(
-        {
-            tax_id: {$in: sanitize(req.body.taxid)}
-        },
-        (err, taxid) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
+exports.createCompany = async (req, res) => {
+    try {
+        if (req.body.taxid) {
+            const taxid = await Company.find({ tax_id: {$in: sanitize(req.body.taxid) }})
             if (taxid.length === 0) {
                 const company = new Company({
                     tax_id: req.body.taxid,
@@ -84,31 +77,26 @@ exports.createCompany = (req, res) => {
                     job_count: 0,
                     status: true
                 });
-                company.save(err => {
-                    if (err){
-                        return res.status(500).send({message: err});
-                    }
-                    const company_detail = new Company_detail({
-                        company_name: req.body.name,
-                        company_province: req.body.province,
-                        company_postal: req.body.postal,
-                        address: req.body.address
-                    });
-                    company_detail.tax_id.push(company._id);
-                    company_detail.save(err => {
-                        if (err){
-                            return res.status(500).send({message: err});
-                        }
-                        company.company_detail.push(company_detail._id);
-                        company.save();
-                    });
-                    res.status(200).send({message: "Company created"});
+                await company.save()
+                const company_detail = new Company_detail({
+                    company_name: req.body.name,
+                    company_province: req.body.province,
+                    company_postal: req.body.postal,
+                    address: req.body.address
                 });
+                company_detail.tax_id.push(company._id);
+                await company_detail.save()
+                company.company_detail.push(company_detail._id);
+                await company.save();
+                res.status(200).send({message: "Company created"});
             }
             else {
-            res.status(400).send({company_exist: true});
+                res.status(400).send({company_exist: true});
             }
-        })
+        }
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
     }
 };
 
@@ -119,7 +107,6 @@ exports.createCompany = (req, res) => {
  * @see
  */
 exports.signup = (req, res) => {
-
     const user = new User({
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),
@@ -196,9 +183,9 @@ exports.signup = (req, res) => {
                             if (err) {
                                 return res.status(500).send({message: err});
                             }
+                            console.log(process.env.VERIFYEMAILTOKENLIFE)
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                expiresIn: process.env.VERIFYEMAILTOKENLIFE // 24 hours
-                                // expiresIn: 86400
+                                expiresIn: process.env.VERIFYEMAILTOKENLIFE
                             });
 
                             readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
@@ -212,7 +199,6 @@ exports.signup = (req, res) => {
                                     from: process.env.EMAILFROM,
                                     to: user.email,
                                     subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
-                                    // html: token
                                     html: htmlToSend
                                 }
                                 
@@ -234,26 +220,18 @@ exports.signup = (req, res) => {
     });
 };
 
-exports.verifyEmail = (req, res) => {
-    jwt.verify(req.params.token, config.verifySecret, (err, decoded) => {
-        if (err) {
-            res.status(401).send(err);
-            return;
-        }
+exports.verifyEmail = async (req, res) => {
+    try {
+        const decoded = await jwt.verify(req.params.token, config.verifySecret)
         req.userId = decoded.id;
-        User.findById(sanitize(req.userId)).exec((err, user) => {
-            if (err) {
-                return res.status(500).send(err);
-            }
-            user.status = true;
-            user.save(err => {
-                if (err) {
-                    return res.status(500).send(err);
-                }
-                res.status(200).send({ message: "User is activated" });
-            })
-        })
-    });
+        const user = await User.findById(sanitize(req.userId))
+        user.status = true;
+        await user.save()
+        res.status(200).send({ message: "User is activated" });
+    }
+    catch (err) {
+        return res.status(500).send(err);
+    }
 }
 
 /**
@@ -262,113 +240,89 @@ exports.verifyEmail = (req, res) => {
  * @returns boolean
  * @see
  */
-exports.signIn = (req, res) => {
-    User.findOne({
-        username: sanitize(req.body.username)
-    })
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-
-            if (!user) {
-                return res.status(401).send({
-                    accessToken: null,
-                    message: "Invalid Username or Password!"
-                });
-            }
-
-            let passwordIsValid = bcrypt.compareSync(
-                req.body.password,
-                user.password
-            );
-
-            if (!passwordIsValid) {
-                return res.status(401).send({
-                    accessToken: null,
-                    message: "Invalid Username or Password!"
-                });
-            }
-            const token = jwt.sign({id: user.id}, config.secret, {
-                expiresIn: 86400 // process.env.TOKENLIFE
+exports.signIn = async (req, res) => {
+    try {
+        const user = await User.findOne({ username: sanitize(req.body.username) })
+        if (!user) {
+            return res.status(401).send({
+                accessToken: null,
+                message: "Invalid Username or Password!"
             });
-            const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-                expiresIn: process.env.REFRESHTOKENLIFE
+        }
+        let passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+        if (!passwordIsValid) {
+            return res.status(401).send({
+                accessToken: null,
+                message: "Invalid Username or Password!"
             });
-            User.findById(sanitize(user._id)).populate("role").populate("avatar")
-                .exec((err, user_callback) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    if (user_callback.status === false) {
-                        return res.status(403).send({message: "User Deactivated!"});
-                    }
-                    user_callback.updateOne({refresh_token: refreshToken},
-                    [],
-                    function (err) {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.cookie('refreshToken', refreshToken);
-                        res.status(200).send({
-                            id: user._id,
-                            username: user.username,
-                            accessToken: token,
-                            email: user.email,
-                            role: user_callback.role[0].name,
-                            avatar: user_callback.avatar[0].value,
-                            created_at: user.createdAt,
-                            updated_at: user.updatedAt,
-                        });
-                    });
-            });
+        }
+        const token = jwt.sign({id: user.id}, config.secret, {
+            expiresIn: 86400 //process.env.TOKENLIFE
         });
+        const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
+            expiresIn: 86400 //process.env.REFRESHTOKENLIFE
+        });
+        const user_callback = await User.findById(sanitize(user._id)).populate("role").populate("avatar")
+        if (user_callback.status === false) {
+            return res.status(403).send({message: "User Deactivated!"});
+        }
+        await user_callback.updateOne({refresh_token: refreshToken}, [])
+        res.cookie('refreshToken', refreshToken);
+        res.status(200).send({
+            id: user._id,
+            username: user.username,
+            accessToken: token,
+            email: user.email,
+            role: user_callback.role[0].name,
+            avatar: user_callback.avatar[0].value,
+            created_at: user.createdAt,
+            updated_at: user.updatedAt,
+        });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
-exports.generateForgotPwdLink = (req, res) => {
-    User.findOne({
-        email: sanitize(req.params.email),
-    }).exec((err, user) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
+exports.generateForgotPwdLink = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: sanitize(req.params.email) })
         if (!user) {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            expiresIn: process.env.RESETPASSWORDTOKENLIFE // 24 hours
-            // expiresIn: 86400
+            expiresIn: process.env.RESETPASSWORDTOKENLIFE
         });
-
         readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
-
             let template = handlebars.compile(html)
             let replacements = {
                 verifyLink: process.env.CLIENTURL + 'auth/forget-password/' + token
             };
             let htmlToSend = template(replacements);
-
             let mail = {
                 from: process.env.EMAILFROM,
                 to: user.email,
-                subject: "Reset password link for "+ user.username + " at TG Smart Backhaul", 
+                subject: "Reset password link for "+ user.username + " at TG Smart Backhaul",
                 html: htmlToSend
-             }
-             smtpTransport.sendMail(mail, function(err, response){
+            }
+            smtpTransport.sendMail(mail, function(err, response){
                 smtpTransport.close();
                 if (err){
                     return res.status(500).send(err);
                 }
                 else {
-                   console.log(response);
-                   res.status(200).send({ verifyLink: token });
+                    console.log(response);
+                    res.status(200).send({ verifyLink: token });
                 }
-             });
-            res.status(200).send({
-                tokenForgotPwdLink: token
+                res.status(200).send({
+                    tokenForgotPwdLink: token
+                });
             });
         })
-    });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };
 
 
@@ -410,5 +364,3 @@ exports.resetPwd = (req, res) => {
         return res.status(401).send({ message: "Token expired!" })
     }
 };
-
-

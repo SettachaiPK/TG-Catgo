@@ -11,8 +11,6 @@ const Log = db.log
 const Comment = db.comment;
 const Notification = db.notification;
 
-// aggregate.count("userCount");
-
 exports.overviewJobStatusCount = (req, res) => {
     User.findById(req.userId)
         .populate('tax_id')
