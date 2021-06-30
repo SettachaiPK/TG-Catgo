@@ -103,8 +103,11 @@ exports.jobPickUp = async (req, res) => {
         job_callback.confPickupTimeMinutes = req.body.pickupTimeMinutes;
         job_callback.status = 3;
         await job_callback.save()
+        const user = await User.findById(req.userId)
         const log = new Log({
-            action: "Select pick up time"
+            action: "Select pick up time",
+            username: user.username,
+            email: user.email
         });
         log.user.push(req.userId);
         log.job.push(job_callback._id);
@@ -146,8 +149,11 @@ exports.confirmPayment = async (req, res) => {
         }
         job_callback.status = 2;
         await job_callback.save()
+        const user = await User.findById(req.userId)
         const log = new Log({
-            action: "Confirm payment"
+            action: "Confirm payment",
+            username: user.username,
+            email: user.email
         });
         log.user.push(req.userId);
         log.job.push(job_callback._id);

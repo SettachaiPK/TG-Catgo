@@ -10,7 +10,7 @@ const User_detail = db.user_detail
 ;
 exports.initial = async () => {
     try { 
-        const user_count = await User.countDocuments()
+        const user_count = await User.countDocuments({})
         const role_count = await Role.countDocuments({})
         const profile_imange_count = await Profile_image.countDocuments({})
         if (profile_imange_count === 0) {

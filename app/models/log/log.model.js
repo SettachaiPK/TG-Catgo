@@ -17,6 +17,8 @@ const Log = mongoose.model(
                     ref: "Job"
             }]
         ,
+        username: String,
+        email: String,
         action: String,
         createAt: {
             type: Date,

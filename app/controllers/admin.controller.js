@@ -278,7 +278,6 @@ exports.adminGetAllJob = async (req, res) => {
     }
     catch (err) {
         return res.status(500).send({message: err});
-
     }
 };
 
@@ -439,7 +438,9 @@ exports.adminCreateJob = async (req, res) => {
             await job.save()
             const user = await User.findById(req.userId)
             const log = new Log({
-                action: "Create job"
+                action: "Create job",
+                username: user.username,
+                email: user.email
             });
             log.user.push(req.userId);
             log.job.push(job._id);
@@ -456,17 +457,24 @@ exports.adminCreateJob = async (req, res) => {
 }
 
 exports.callLog = async (req, res) => {
+    const setting = req.query
     try {
         let options = {
             populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: { path: 'username', populate: 'avatar' }} }],
-            page:req.query.page,
-            limit:req.query.limit,
-            sort:{ [req.query.sort_by]: [req.query.order] },
+            page: setting.page,
+            limit: setting.limit,
+            sort:{ [setting.sort_by]: [setting.order] },
         };
-        const result = await Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options)
+        const result = await Log.paginate({ 
+            $or:[
+                {"username": { "$regex": req.query.search, "$options": "i" }},
+                {"email": { "$regex": req.query.search, "$options": "i" }},
+            ]
+        }, options)
         res.status(200).send(result)
     }
     catch (err) {
+        console.log(err)
         return res.status(500).send({message: err});
     }
 };

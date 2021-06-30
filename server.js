@@ -5,13 +5,8 @@ const cookieParser = require('cookie-parser')
 const fileUpload = require('express-fileupload');
 const cors = require("cors");
 const path = require('path');
-const fs = require("fs");
-const dbConfig = require("./app/config/db.config");
 const db = require("./app/models");
-const { user } = require("./app/models");
 const migrations = require("./migrations/migrations");
-const Role = db.role;
-const Profile_image = db.profile_image;
 const Chat = db.chat;
 const User = db.user;
 const Notification = db.notification;
@@ -27,10 +22,6 @@ require('dotenv').config()
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
-
-
-// define root path
-const root = path.dirname(require.main.filename);
 
 const corsOptions = {
     origin: /localhost:8080$/, // น้ำตาจะไหล ลืมใส่ regex
@@ -73,9 +64,9 @@ server = app.listen(PORT, () => {
 //socket.io instantiation
 const io = require("socket.io")(server, {
     cors: {
-        origin: process.env.CLIENTURL,
+        origin: /localhost:8080$/,
         methods: ["GET", "POST"],
-        credentials: false
+        credentials: true
     }
   });
 //listen on every connection
@@ -142,7 +133,8 @@ io.on('connection', (socket) => {
 // connect to database
 db.mongoose.connect(process.env.DB, {
         useNewUrlParser: true,
-        useUnifiedTopology: true
+        useUnifiedTopology: true,
+        useCreateIndex: true
     })
     .then(() => {
         console.log("Successfully connect to MongoDB.");

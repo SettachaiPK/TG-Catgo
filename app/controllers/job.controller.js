@@ -117,7 +117,9 @@ exports.createJob = async (req, res) => {
         job.company = user.tax_id[0];
         await job.save()
         const log = new Log({
-            action: "Create job"
+            action: "Create job",
+            username: user.username,
+            email: user.email
         });
         log.user.push(req.userId);
         log.job.push(job._id);
@@ -154,8 +156,11 @@ exports.selectDriver = async (req, res) => {
         job_callback.driverAssigner.push(req.userId);
         job_callback.status = 4;
         await job_callback.save()
+        const user = await User.findById(req.userId)
         const log = new Log({
-            action: "Select driver"
+            action: "Select driver",
+            username: user.username,
+            email: user.email
         });
         log.user.push(req.userId);
         log.job.push(job_callback._id);
