@@ -11,100 +11,27 @@ const Log = db.log
 const Comment = db.comment;
 const Notification = db.notification;
 
-exports.overviewJobStatusCount = (req, res) => {
-    User.findById(req.userId)
-        .populate('tax_id')
-        .exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            // status 0
-            Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 0}] } } ,{
-                $group : {
-                    _id : null,
-                    total : {
-                        $sum : 1
-                    }
-                }
-            }]).exec((err, job_status0) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                // status 1
-                Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 1}] } } ,{
-                    $group : {
-                        _id : null,
-                        total : {
-                            $sum : 1
-                        }
-                    }
-                }]).exec((err, job_status1) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    //status 2
-                    Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 2}] } } ,{
-                        $group : {
-                            _id : null,
-                            total : {
-                                $sum : 1
-                            }
-                        }
-                    }]).exec((err, job_status2) => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        //status 3
-                        Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 3}] } } ,{
-                            $group : {
-                                _id : null,
-                                total : {
-                                    $sum : 1
-                                }
-                            }
-                        }]).exec((err, job_status3) => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            //status 4
-                            Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 4}] } } ,{
-                                $group : {
-                                    _id : null,
-                                    total : {
-                                        $sum : 1
-                                    }
-                                }
-                            }]).exec((err, job_status4) => {
-                                if (err) {
-                                    return res.status(500).send({message: err});
-                                }
-                                //status 5
-                                Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 5}] } } ,{
-                                    $group : {
-                                        _id : null,
-                                        total : {
-                                            $sum : 1
-                                        }
-                                    }
-                                }]).exec((err, job_status5) => {
-                                    if (err) {
-                                        return res.status(500).send({message: err});
-                                    }
-                                    let result = {}
-                                    if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
-                                    if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
-                                    if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
-                                    if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
-                                    if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
-                                    if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
-                                    res.status(200).send(result)
-                                });
-                            });
-                        });
-                    });
-                });
-            });
-        });
+exports.overviewJobStatusCount = async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).populate('tax_id')
+        const job_status0 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 0}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        const job_status1 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 1}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        const job_status2 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 2}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        const job_status3 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 3}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        const job_status4 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 4}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        const job_status5 = await Job.aggregate([{ $match: { $and: [ {'company': user.tax_id[0]._id}, {'status': 5}] } } ,{$group : {_id : null, total : {$sum : 1}}}])
+        let result = {}
+        if (job_status0.length === 0) { result.status0 = 0 } else { result.status0 = job_status0[0].total }
+        if (job_status1.length === 0) { result.status1 = 0 } else { result.status1 = job_status1[0].total }
+        if (job_status2.length === 0) { result.status2 = 0 } else { result.status2 = job_status2[0].total }
+        if (job_status3.length === 0) { result.status3 = 0 } else { result.status3 = job_status3[0].total }
+        if (job_status4.length === 0) { result.status4 = 0 } else { result.status4 = job_status4[0].total }
+        if (job_status5.length === 0) { result.status5 = 0 } else { result.status5 = job_status5[0].total }
+        res.status(200).send(result)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };
 
 exports.overviewAllJob = (req, res) => {
@@ -171,222 +98,150 @@ exports.overviewAllJob = (req, res) => {
                 });
             }
         });
-}
+    }
+
 //0 
-exports.createJob = (req, res) => {
-    const job = new Job({
-        status: 0,
-        awbNumber: req.body.awbNumber,
-        hwbSerialNumber: req.body.hwbSerialNumber,
-        flightNumber: req.body.flightNumber,
-        jobNumber: req.body.jobNumber,
-        customsEntryNumber: req.body.customsEntryNumber,
-        customsEntryNumberDate: req.body.customsEntryNumberDate,
-    });
-    job.save(err => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        User.findById(req.userId).populate('tax_id').exec((err, user) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            job.company = user.tax_id[0];
-            job.save((err) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                const log = new Log({
-                    action: "Create job"
-                });
-                log.user.push(req.userId);
-                log.job.push(job._id);
-                log.save(err => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                });
-                QRCode.toDataURL(process.env.CLIENTURL + 'driver/my-job-view/' + job._id, function (err, output) {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    job.qrCode = output
-                    console.log(job)
-                    job.save(err => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        res.status(200).send({message: "Job was created successfully!"});
-                    })
-                  })
-            });
+exports.createJob = async (req, res) => {
+    try {
+        const job = new Job({
+            status: 0,
+            awbNumber: req.body.awbNumber,
+            hwbSerialNumber: req.body.hwbSerialNumber,
+            flightNumber: req.body.flightNumber,
+            jobNumber: req.body.jobNumber,
+            customsEntryNumber: req.body.customsEntryNumber,
+            customsEntryNumberDate: req.body.customsEntryNumberDate,
         });
-    });
+        await job.save()
+        const user = await User.findById(req.userId).populate('tax_id')
+        job.company = user.tax_id[0];
+        await job.save()
+        const log = new Log({
+            action: "Create job",
+            username: user.username,
+            email: user.email
+        });
+        log.user.push(req.userId);
+        log.job.push(job._id);
+        await log.save()
+        const qrcode = await QRCode.toDataURL(process.env.CLIENTURL + 'driver/my-job-view/' + job._id)
+        job.qrCode = qrcode
+        await job.save()
+        res.status(200).send({message: "Job was created successfully!"});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 };
 
 // 3 > 4 notify assigned driver
-exports.selectDriver = (req, res) => {
-
-    Job.findOne({_id: sanitize(req.params.job_id), status: 3})
-        .populate("driver", '-password')
-        .exec((err, job_callback) => {
-            if (job_callback === null) {
-                res.status(404).send({message: "no job found."});
-                return;
-            }
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            if (job_callback.driver.length > 0) {
-                job_callback.driver.pop()
-            }
-            job_callback.truck = JSON.parse(req.body.truck);
-            job_callback.driver.push(req.body.driver);
-            job_callback.driverAssigner.push(req.userId);
-            job_callback.status = 4;
-            job_callback.save((err) => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                const log = new Log({
-                    action: "Select driver"
-                });
-                log.user.push(req.userId);
-                log.job.push(job_callback._id);
-                log.save(err => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    User.findById(sanitize(req.body.driver)).exec((err,userDriver)=>{
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        const notification = new Notification({
-                            detail: "You has been assigned to job"
-                        });
-                        notification.user.push(userDriver._id);
-                        notification.job.push(req.params.job_id);
-                        notification.save(err => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            userDriver.notification += 1;
-                            userDriver.save((err)=>{
-                                if (err) {
-                                    res.status(500).send({message: err});
-                                }
-                                res.status(200).send({message: "Driver selected"})
-                            })
-                        });
-                    });
-                });
-            });
+exports.selectDriver = async (req, res) => {
+    try {
+        const job_callback = await Job.findOne({_id: sanitize(req.params.job_id), status: 3}).populate("driver", '-password')
+        if (job_callback === null) {
+            res.status(404).send({message: "no job found."});
+            return;
+        }
+        if (job_callback.driver.length > 0) {
+            job_callback.driver.pop()
+        }
+        if (typeof req.body.truck === 'string') { 
+            job_callback.truck = JSON.parse(req.body.truck) 
+        }
+        else if (typeof req.body.truck === 'object') 
+        { 
+            job_callback.truck = req.body.truck 
+        }
+        job_callback.driver.push(req.body.driver);
+        job_callback.driverAssigner.push(req.userId);
+        job_callback.status = 4;
+        await job_callback.save()
+        const user = await User.findById(req.userId)
+        const log = new Log({
+            action: "Select driver",
+            username: user.username,
+            email: user.email
         });
+        log.user.push(req.userId);
+        log.job.push(job_callback._id);
+        await log.save()
+        const user_driver = await User.findById(sanitize(req.body.driver))
+        const notification = new Notification({
+            detail: "You has been assigned to job"
+        });
+        notification.user.push(user_driver._id);
+        notification.job.push(req.params.job_id);
+        await notification.save()
+        user_driver.notification += 1;
+        await user_driver.save()
+        res.status(200).send({message: "Driver selected"})
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).send({message: err});
+    }
 }
 
-exports.jobDetail = (req, res) => {
-    Job.findById(sanitize(req.params.job_id)).populate("driver", '-password').exec((err, job_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-
+exports.jobDetail = async (req, res) => {
+    try {
+        const job_callback = await Job.findById(sanitize(req.params.job_id)).populate("driver", '-password')
         res.status(200).send(job_callback)
-    });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
-exports.callCommentDriver = (req,res) => {
-    User.findById(sanitize(req.params.driver_id)).exec((err, driver_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
-        Comment.aggregate([{
-            $match : {'driver': driver_callback._id},
-        },{
-            $group : {
-                _id : null,
-                total : {
-                    $avg : "$rating"
-                }
-            }
-        }]).exec((err, job_callback) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            res.status(200).send(job_callback)
-        });
-    });
+exports.callCommentDriver = async (req,res) => {
+    try {
+        const driver_callback = await User.findById(sanitize(req.params.driver_id))
+        const job_callback = await Comment.aggregate([{ $match : {'driver': driver_callback._id }}, { $group : { _id : null, total : { $avg : "$rating" }}}])
+        res.status(200).send(job_callback)
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
 // 0 > 1
-exports.jobMatching = (req, res) => {
-    Job.findOne({_id: sanitize(req.params.job_id), status: 0}).exec((err, job_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
+exports.jobMatching = async (req, res) => {
+    try {
+        const job_callback = await Job.findOne({_id: sanitize(req.params.job_id), status: 0})
         if (job_callback === null) {
             res.status(404).send({message: "no job found."});
             return;
         }
         job_callback.flightDate = req.body.flightDate;
         job_callback.status = 1;
-        job_callback.save((err) => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            res.status(200).send({message: "Pick Up Successful"})
-        })
-    });
+        await job_callback.save()
+        res.status(200).send({message: "Pick Up Successful"})
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
 
-exports.createCommentDriver = (req,res) => {
-    Job.findById(sanitize(req.params.job_id)).exec((err, job_callback) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
+exports.createCommentDriver = async (req,res) => {
+    try {
+        const job_callback = await Job.findById(sanitize(req.params.job_id))
         job_callback.comment = req.body.comment;
         job_callback.rating = req.body.rating;
-        job_callback.save(err => {
-            if (err) {
-                return res.status(500).send({message: err});
-            }
-            const comment = new Comment({
-                comment : req.body.comment,
-                rating : req.body.rating,
-            });
-            comment.driver.push(req.body.driver_id);
-            comment.job.push(req.params.job_id);
-            comment.save(err => {
-                if (err) {
-                    return res.status(500).send({message: err});
-                }
-                // save avg rating to driver model
-                User.findById(sanitize(req.body.driver_id)).populate("user_detail").exec((err, driver_callback) => {
-                    if (err) {
-                        return res.status(500).send({message: err});
-                    }
-                    Comment.aggregate([{
-                        $match : {'driver': driver_callback._id},
-                    },{
-                        $group : {
-                            _id : null,
-                            total : {
-                                $avg : "$rating"
-                            }
-                        }
-                    }]).exec((err, avg_rating_callback) => {
-                        if (err) {
-                            return res.status(500).send({message: err});
-                        }
-                        driver_callback.user_detail[0].avg_rating = avg_rating_callback[0].total
-                        driver_callback.save((err) => {
-                            if (err) {
-                                return res.status(500).send({message: err});
-                            }
-                            res.status(200).send({message: "Commented"});
-                        })
-                    });
-                });
-            });
+        await job_callback.save()
+        const comment = new Comment({
+            comment : req.body.comment,
+            rating : req.body.rating,
         });
-    });
+        comment.driver.push(req.body.driver_id);
+        comment.job.push(req.params.job_id);
+        await comment.save()
+        // save avg rating to driver model
+        const driver_callback = await User.findById(sanitize(req.body.driver_id)).populate("user_detail")
+        const avg_rating_callback = await Comment.aggregate([{ $match : { 'driver': driver_callback._id }},{ $group : { _id : null, total : { $avg : "$rating" }}}])
+        driver_callback.user_detail[0].avg_rating = avg_rating_callback[0].total
+        await driver_callback.save()
+        res.status(200).send({message: "Commented"});
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }

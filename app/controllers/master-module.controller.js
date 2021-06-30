@@ -2,11 +2,12 @@ const config = require("../config/auth.config");
 const db = require("../models");
 const Province = db.province;
 
-exports.provinces = (req, res) => {
-    Province.find().exec((err, data) => {
-        if (err) {
-            return res.status(500).send({message: err});
-        }
+exports.provinces = async (req, res) => {
+    try {
+        const data = await Province.find()
         res.status(200).send(data)
-    });
+    }
+    catch (err) {
+        return res.status(500).send({message: err});
+    }
 }
