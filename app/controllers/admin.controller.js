@@ -455,6 +455,19 @@ exports.adminCreateJob = async (req, res) => {
     }
 }
 
+<<<<<<< HEAD
+exports.callLog = (req, res) => {
+    let options = {
+        populate: [{path: 'job'}, {path: 'user', select: 'user_detail', populate: { path: 'user_detail', populate: 'username' } },{ path: 'user', populate: 'avatar' }],
+        page:req.query.page,
+        limit:req.query.limit,
+        sort:{ [req.query.sort_by]: [req.query.order] },
+    };
+    Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options, function (err, result) {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+=======
 exports.callLog = async (req, res) => {
     try {
         let options = {
@@ -464,6 +477,7 @@ exports.callLog = async (req, res) => {
             sort:{ [req.query.sort_by]: [req.query.order] },
         };
         const result = await Log.paginate({ [req.query.sort_by]: { "$regex": req.query.search, "$options": "i" }}, options)
+>>>>>>> master
         res.status(200).send(result)
     }
     catch (err) {

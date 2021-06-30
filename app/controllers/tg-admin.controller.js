@@ -118,7 +118,7 @@ exports.getAllJob = (req, res) => {
         populate: [{path: 'company', populate: { path: 'company_detail' }}, {path: 'driver', select: 'user_detail', populate: { path: 'user_detail' } }],
         page:req.query.page,
         limit:req.query.limit,
-        sort:{ [req.query.sort_by]: [req.query.order] },
+        // sort:{ [req.query.sort_by]: [req.query.order] },
     };
     if (req.query.search) {
         function dateToEpoch(thedate) {

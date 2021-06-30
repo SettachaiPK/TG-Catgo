@@ -62,7 +62,6 @@ require("./app/routes/ff.routes")(app);
 require("./app/routes/driver.routes")(app);
 require("./app/routes/tg-admin.routes")(app);
 require("./app/routes/master-module.routes")(app);
-require("./app/routes/public.routes")(app);
 require("./app/routes/chat.routes")(app);
 
 // set port, listen for requests

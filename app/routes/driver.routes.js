@@ -23,9 +23,10 @@ module.exports = app => {
     );
 
     router.get(
-        "/:job_id/update_status",
+        "/:job_id/received",
         [authJwt.verifyToken, authJwt.isDriver, authJwt.isJobBelongToDriver],
-        driverController.changeStatus
+        driverController.receivedPackage
     );
+
     app.use('/apis/driver', router);
 };

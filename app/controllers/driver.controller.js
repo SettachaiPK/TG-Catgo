@@ -5,6 +5,7 @@ const User = db.user;
 const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Profile_image = db.profile_image;
+const Notification = db.notification;
 const Company = db.company;
 const Role = db.role;
 const Job = db.job;
@@ -286,8 +287,9 @@ exports.jobDriverDetail = async (req, res) => {
     }
 }
 
-exports.changeStatus = (req, res) => {
-    Job.findById(sanitize(req.params.job_id)).exec((err, job_callback) => {
+// 4 > 5 notify driver assigner and driver
+exports.receivedPackage = (req, res) => {
+    Job.findOne({_id: sanitize(req.params.job_id), status: 4}).exec((err, job_callback) => {
         if (err) {
             return res.status(500).send({message: err});
         }
@@ -295,12 +297,60 @@ exports.changeStatus = (req, res) => {
             res.status(404).send({message: "no job found."});
             return;
         }
-        let new_status = job_callback.status + 1;
-        job_callback.updateOne( {status: new_status}, [], function (err) {
+        job_callback.status = 5;
+        job_callback.save((err) => {
             if (err) {
                 return res.status(500).send({message: err});
             }
-            res.status(200).send({message: 'updated'});
-        });
-    });
+            User.findById(job_callback.driverAssigner[0]).exec((err, userAssigner) => {
+                const notification = new Notification({
+                    detail: "Job completed"
+                });
+                notification.user.push(userAssigner._id);
+                notification.job.push(req.params.job_id);
+                notification.save(err => {
+                    if (err) {
+                        return res.status(500).send({message: err});
+                    }
+                    userAssigner.notification += 1;
+                    userAssigner.save((err) => {
+                        if (err) {
+                            res.status(500).send({message: err});
+                        }
+                        User.findById(job_callback.driver[0]).exec((err, userDriver) => {
+                            const notification = new Notification({
+                                detail: "Job completed"
+                            });
+                            notification.user.push(userDriver._id);
+                            notification.job.push(req.params.job_id);
+                            notification.save(err => {
+                                if (err) {
+                                    return res.status(500).send({message: err});
+                                }
+                                userDriver.notification += 1;
+                                userDriver.save((err) => {
+                                    if (err) {
+                                        res.status(500).send({message: err});
+                                    }
+                                    Company.findById(job_callback.company[0]).exec((err, company_callback) => {
+                                        if (err) {
+                                            return res.status(500).send({message: err});
+                                        }
+                                        console.log(company_callback);
+                                        company_callback.job_count += 1;
+                                        company_callback.save(err => {
+                                            if (err) {
+                                                return res.status(500).send({message: err});
+                                            }
+                                            res.status(200).send({message: "Package received"})
+                                        })
+                                    })
+                                })
+                            })
+                        })
+                    })
+                })
+            }) 
+        })
+    })
 }

@@ -240,9 +240,7 @@ exports.selectDriver = (req, res) => {
             if (job_callback.driver.length > 0) {
                 job_callback.driver.pop()
             }
-            job_callback.confPickupTimeHours = req.body.confPickupTimeHours;
-            job_callback.confPickupTimeMinutes = req.body.confPickupTimeMinutes;
-            job_callback.truckNumber = req.body.truckNumber;
+            job_callback.truck = JSON.parse(req.body.truck);
             job_callback.driver.push(req.body.driver);
             job_callback.driverAssigner.push(req.userId);
             job_callback.status = 4;
@@ -330,7 +328,6 @@ exports.jobMatching = (req, res) => {
             return;
         }
         job_callback.flightDate = req.body.flightDate;
-        job_callback.numberOfPieces = req.body.numberOfPieces;
         job_callback.status = 1;
         job_callback.save((err) => {
             if (err) {
@@ -338,5 +335,58 @@ exports.jobMatching = (req, res) => {
             }
             res.status(200).send({message: "Pick Up Successful"})
         })
+    });
+}
+
+exports.createCommentDriver = (req,res) => {
+    Job.findById(sanitize(req.params.job_id)).exec((err, job_callback) => {
+        if (err) {
+            return res.status(500).send({message: err});
+        }
+        job_callback.comment = req.body.comment;
+        job_callback.rating = req.body.rating;
+        job_callback.save(err => {
+            if (err) {
+                return res.status(500).send({message: err});
+            }
+            const comment = new Comment({
+                comment : req.body.comment,
+                rating : req.body.rating,
+            });
+            comment.driver.push(req.body.driver_id);
+            comment.job.push(req.params.job_id);
+            comment.save(err => {
+                if (err) {
+                    return res.status(500).send({message: err});
+                }
+                // save avg rating to driver model
+                User.findById(sanitize(req.body.driver_id)).populate("user_detail").exec((err, driver_callback) => {
+                    if (err) {
+                        return res.status(500).send({message: err});
+                    }
+                    Comment.aggregate([{
+                        $match : {'driver': driver_callback._id},
+                    },{
+                        $group : {
+                            _id : null,
+                            total : {
+                                $avg : "$rating"
+                            }
+                        }
+                    }]).exec((err, avg_rating_callback) => {
+                        if (err) {
+                            return res.status(500).send({message: err});
+                        }
+                        driver_callback.user_detail[0].avg_rating = avg_rating_callback[0].total
+                        driver_callback.save((err) => {
+                            if (err) {
+                                return res.status(500).send({message: err});
+                            }
+                            res.status(200).send({message: "Commented"});
+                        })
+                    });
+                });
+            });
+        });
     });
 }
