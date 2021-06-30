@@ -1,3 +1,4 @@
+const { passwordStrength } = require('check-password-strength')
 const config = require("../config/auth.config");
 const db = require("../models");
 const mailer = require("nodemailer");
@@ -107,6 +108,9 @@ exports.createCompany = async (req, res) => {
  * @see
  */
 exports.signup = (req, res) => {
+    if ((passwordStrength(req.body.password).id) < process.env.PASSWORDSTRENGTH) {
+        return res.status(406).send({message: "Password too weak"});
+    }
     const user = new User({
         username: req.body.username,
         password: bcrypt.hashSync(req.body.password, 8),

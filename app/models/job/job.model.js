@@ -16,6 +16,8 @@ const Job = mongoose.model(
         dockNumber: { type: String, default: '-' },
         pickupTimeHours: { type: String, default: '-' },
         pickupTimeMinutes: { type: String, default: '-' },
+        confPickupTimeHours: { type: String, default: '-' },
+        confPickupTimeMinutes: { type: String, default: '-' },
         qrCode: { type: String, default: '-' },
         truck: { type: Array, default: [] },
         comment: { type: String, default: '-' },
