@@ -7,7 +7,8 @@ const User_detail = db.user_detail;
 const Company_detail = db.company_detail;
 const Company = db.company;
 const Job = db.job;
-const Log = db.log
+const Log = db.log;
+const Role = db.role;
 const Comment = db.comment;
 const Notification = db.notification;
 
@@ -174,6 +175,19 @@ exports.selectDriver = async (req, res) => {
         await notification.save()
         user_driver.notification += 1;
         await user_driver.save()
+        
+        const role = await Role.findOne({ name: "tg-admin"})
+        const tg_users = await User.find({ role: role._id })
+        tg_users.forEach(async (tg_user, index) => {
+            const notification = new Notification({
+                detail: "A request has been paid by FF. Please assign dock number and pickup time."
+            });
+            notification.user.push(tg_user);
+            notification.job.push(req.params.job_id);
+            await notification.save()
+            tg_user.notification += 1;
+            await tg_user.save()
+        })
         res.status(200).send({message: "Driver selected"})
     }
     catch (err) {
@@ -242,6 +256,22 @@ exports.createCommentDriver = async (req,res) => {
         res.status(200).send({message: "Commented"});
     }
     catch (err) {
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.getAlltgadmin = async (req, res) => {
+    console.log('getAllTgAdmin')
+    try {
+        const roles = await Role.findOne({ name: {$in: "tg-admin"}})
+        console.log(roles)
+        const tgadmin_users = await User.find({ 'role' : roles._id })
+        console.log(tgadmin_users)
+        
+        res.status(200).send(tgadmin_users)
+    }
+    catch (err) {
+        console.log(err)
         return res.status(500).send({message: err});
     }
 }

@@ -17,6 +17,12 @@ module.exports = app => {
     );
 
     router.get(
+        "/getallff/:company_id",
+        [authJwt.verifyToken, authJwt.isDriver],
+        driverController.driverGetAllFF
+    );
+
+    router.get(
         "/:job_id",
         [authJwt.verifyToken, authJwt.isDriver, authJwt.isJobBelongToDriver],
         driverController.jobDriverDetail

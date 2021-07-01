@@ -150,6 +150,7 @@ exports.confirmPayment = async (req, res) => {
         job_callback.status = 2;
         await job_callback.save()
         const user = await User.findById(req.userId)
+        console.log
         const log = new Log({
             action: "Confirm payment",
             username: user.username,
@@ -158,7 +159,54 @@ exports.confirmPayment = async (req, res) => {
         log.user.push(req.userId);
         log.job.push(job_callback._id);
         await log.save()
+        const notification = new Notification({
+            detail: "You has been assigned to job"
+        });
+        const role = await Role.findOne({ name: "tg-admin"})
+        const tg_users = await User.find({ role: role._id })
+        tg_users.forEach(async (tg_user, index) => {
+            const notification = new Notification({
+                detail: "A request has been paid by FF. Please assign dock number and pickup time."
+            });
+            notification.user.push(tg_user);
+            notification.job.push(req.params.job_id);
+            await notification.save()
+            tg_user.notification += 1;
+            await tg_user.save()
+        })
         res.status(200).send({message: "Payment Successful"})
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.getAllTgAdmin = async (req, res) => {
+    console.log('getAllTgAdmin')
+    try {
+        const roles = await Role.findOne({ name: {$in: "tg-admin"}})
+        console.log(roles)
+        const tgadmin_users = await User.find({ 'role' : roles._id })
+        console.log(tgadmin_users)
+        
+        res.status(200).send(tgadmin_users)
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).send({message: err});
+    }
+}
+
+exports.getAllFF = async (req, res) => {
+    try {
+        console.log(req.params.company_id)
+        const company = await Company.findById(req.params.company_id)
+        
+        const roles = await Role.findOne({ name: {$in: "freight-forwarder"}})
+        const ff_users = await User.find({ 'tax_id' : company._id, 'role' : roles._id })
+        console.log(ff_users);
+        res.status(200).send(ff_users)
     }
     catch (err) {
         console.log(err)

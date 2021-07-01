@@ -287,6 +287,21 @@ exports.jobDriverDetail = async (req, res) => {
     }
 }
 
+
+
+exports.driverGetAllFF = async (req, res) => {
+    try {
+        const company = await Company.findById(req.params.company_id)
+        const roles = await Role.findOne({ name: {$in: "freight-forwarder"}})
+        const ff_users = await User.find({ 'tax_id' : company._id, 'role' : roles._id })
+        
+        res.status(200).send(ff_users)
+    }
+    catch (err) {
+        console.log(err)
+        return res.status(500).send({message: err});
+    }
+}
 // 4 > 5 notify driver assigner and driver
 exports.receivedPackage = (req, res) => {
     Job.findOne({_id: sanitize(req.params.job_id), status: 4}).exec((err, job_callback) => {
