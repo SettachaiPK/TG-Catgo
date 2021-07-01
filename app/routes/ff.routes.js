@@ -24,6 +24,12 @@ module.exports = app => {
         jobController.overviewAllJob
     );
 
+    router.get(
+        "/getalltgadmin",
+        [authJwt.verifyToken, authJwt.isFreightForwarder],
+        jobController.getAlltgadmin
+    );
+    
     router.post(
         "/jrq/create",
         [authJwt.verifyToken, authJwt.isFreightForwarder],

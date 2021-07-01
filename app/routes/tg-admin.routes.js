@@ -24,6 +24,18 @@ module.exports = app => {
         tgAdminController.getAllJob
     );
 
+    router.get(
+        "/getallff/:company_id",
+        [authJwt.verifyToken,authJwt.isTgAdmin],
+        tgAdminController.getAllFF
+    );
+
+    router.get(
+        "/getalltgadmin",
+        [authJwt.verifyToken,authJwt.isTgAdmin],
+        tgAdminController.getAllTgAdmin
+    );
+    
     router.get("/:job_id",
         [authJwt.verifyToken, authJwt.isTgAdmin],
         tgAdminController.jobTgadminDetail
@@ -39,12 +51,12 @@ module.exports = app => {
         "/:job_id/confirm_payment",
         [authJwt.verifyToken, authJwt.isTgAdmin],
         tgAdminController.confirmPayment
-    )
+    );
 
     router.get(
         "/:job_id/job_matching",
         jobController.jobMatching
-    )
+    );
 
     app.use('/apis/tgadmin', router);
 };
