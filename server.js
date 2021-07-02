@@ -22,9 +22,10 @@ require('dotenv').config()
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
-
+const CLIENT_URL_REGEX = new RegExp(process.env.CLIENTURL)
+const DOMAIN_URL_REGEX = new RegExp(process.env.DOMAIN)
 const corsOptions = {
-    origin: [/tgcargo.hexgen.codes$/, /23.97.58.138$/], // น้ำตาจะไหล ลืมใส่ regex
+    origin: [CLIENT_URL_REGEX, DOMAIN_URL_REGEX],
     credentials: true,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   }
