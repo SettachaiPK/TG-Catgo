@@ -105,7 +105,7 @@ exports.overviewAllJob = (req, res) => {
 exports.createJob = async (req, res) => {
     try {
         const job = new Job({
-            status: 0,
+            status: 1,
             awbNumber: req.body.awbNumber,
             hwbSerialNumber: req.body.hwbSerialNumber,
             flightNumber: req.body.flightNumber,
@@ -113,6 +113,7 @@ exports.createJob = async (req, res) => {
             customsEntryNumber: req.body.customsEntryNumber,
             customsEntryNumberDate: req.body.customsEntryNumberDate,
         });
+	job.flightDate = Date.now();
         await job.save()
         const user = await User.findById(req.userId).populate('tax_id')
         job.company = user.tax_id[0];

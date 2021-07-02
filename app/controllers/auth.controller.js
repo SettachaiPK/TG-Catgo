@@ -209,6 +209,7 @@ exports.signup = (req, res) => {
                                 smtpTransport.sendMail(mail, function(err, response){
                                     smtpTransport.close();
                                     if (err){
+					console.log(err)
                                         return res.status(500).send(err);
                                     }
                                     else {
@@ -261,10 +262,10 @@ exports.signIn = async (req, res) => {
             });
         }
         const token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400 //process.env.TOKENLIFE
+            expiresIn: process.env.TOKENLIFE
         });
         const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-            expiresIn: 86400 //process.env.REFRESHTOKENLIFE
+            expiresIn: process.env.REFRESHTOKENLIFE
         });
         const user_callback = await User.findById(sanitize(user._id)).populate("role").populate("avatar")
         if (user_callback.status === false) {
@@ -284,6 +285,7 @@ exports.signIn = async (req, res) => {
         });
     }
     catch (err) {
+	console.log(err);
         return res.status(500).send({message: err});
     }
 }
