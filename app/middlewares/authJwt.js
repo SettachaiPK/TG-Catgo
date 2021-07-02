@@ -25,10 +25,10 @@ verifyToken = (req, res, next) => {
                     User.findById(second_decoded.id).exec(((err, user) => {
                         if (refreshToken === user.refresh_token) {
                             const token = jwt.sign({id: user.id}, config.secret, {
-                                expiresIn: 86400 //process.env.TOKENLIFE
+                                expiresIn: process.env.TOKENLIFE
                             });
                             const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-                                expiresIn: 86400 //process.env.REFRESHTOKENLIFE
+                                expiresIn: process.env.REFRESHTOKENLIFE
                             });
                             user.updateOne({refresh_token: refreshToken},
                                 [],

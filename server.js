@@ -24,7 +24,7 @@ require('dotenv').config()
 // https://stackabuse.com/handling-cors-with-node-js/
 
 const corsOptions = {
-    origin: /localhost:8080$/, // น้ำตาจะไหล ลืมใส่ regex
+    origin: [/tgcargo.hexgen.codes$/, /23.97.58.138$/], // น้ำตาจะไหล ลืมใส่ regex
     credentials: true,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   }
@@ -64,7 +64,7 @@ server = app.listen(PORT, () => {
 //socket.io instantiation
 const io = require("socket.io")(server, {
     cors: {
-        origin: /localhost:8080$/,
+        origin: /localhost$/,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
         socket.join(data.user_id);
         User.findById(data.user_id).exec((err,user) => {
             io.in(data.user_id).emit('receive-notify',
-            { 
+            {
                 user_id: data.user_id,
                 notification:  user.notification
             });
