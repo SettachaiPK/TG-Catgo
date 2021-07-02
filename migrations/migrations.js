@@ -14,8 +14,12 @@ exports.initial = async () => {
         const role_count = await Role.countDocuments({})
         const profile_imange_count = await Profile_image.countDocuments({})
         if (profile_imange_count === 0) {
-            const data = await fs.readFile(root + '/default_image.txt', 'utf8')
-            await new Profile_image({ name: "default", value: data }).save()
+            fs.readFile(root + '/default_image.txt', 'utf8',
+                async function (err, data) {
+                    if (err) throw err;
+                    await new Profile_image({name: "default", value: data}).save()
+                    console.log("added default profile image to default collection");
+                });
             console.log("added default profile image to default collection");
         }
         if (role_count === 0) {

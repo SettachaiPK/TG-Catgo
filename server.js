@@ -57,7 +57,7 @@ require("./app/routes/master-module.routes")(app);
 require("./app/routes/chat.routes")(app);
 
 // set port, listen for requests
-const PORT = 8081;
+const PORT = process.env.SERVER_PORT;
 server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
