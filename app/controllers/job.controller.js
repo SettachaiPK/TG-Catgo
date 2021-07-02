@@ -110,10 +110,10 @@ exports.createJob = async (req, res) => {
             flightNumber: req.body.flightNumber,
             jobNumber: req.body.jobNumber,
             customsEntryNumber: req.body.customsEntryNumber,
-            customsEntryNumberDate: req.body.customsEntryNumberDate,
-            numberOfPieces: 555,
+            customsEntryNumberDate: req.body.customsEntryNumberDate
         });
-	job.flightDate = Date.now();
+        job.numberOfPieces = Math.floor(Math.random() * 1000) + 1
+	    job.flightDate = Date.now();
         await job.save()
         const user = await User.findById(req.userId).populate('tax_id')
         job.company = user.tax_id[0];
