@@ -92,10 +92,6 @@ io.on('connection', (socket) => {
                 id: data.id,
             });
         })
-
-        // socket.to(data.user_id).emit('get-count-notify',{
-        //     detail: data.content
-        //   });
     });
     
     socket.on('join', (data) => {
