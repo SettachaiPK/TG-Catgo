@@ -22,7 +22,7 @@ require('dotenv').config()
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
-const CLIENT_URL_REGEX = new RegExp(process.env.CLIENTURL)
+const CLIENT_URL_REGEX = new RegExp(process.env.CLIENT_URL)
 const DOMAIN_URL_REGEX = new RegExp(process.env.DOMAIN)
 const corsOptions = {
     origin: [CLIENT_URL_REGEX, DOMAIN_URL_REGEX],
