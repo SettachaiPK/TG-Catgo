@@ -126,7 +126,7 @@ exports.createJob = async (req, res) => {
         log.user.push(req.userId);
         log.job.push(job._id);
         await log.save()
-        const qrcode = await QRCode.toDataURL(process.env.CLIENTURL + 'driver/my-job-view/' + job._id)
+        const qrcode = await QRCode.toDataURL(process.env.CLIENT_URL + 'driver/my-job-view/' + job._id)
         job.qrCode = qrcode
         await job.save()
         res.status(200).send({message: "Job was created successfully!"});

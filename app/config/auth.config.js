@@ -1,9 +1,9 @@
 module.exports = {
-  secret: process.env.TOKENSECRET,
-  refreshTokenSecret: process.env.REFRESHTOKENSECRET,
-  verifySecret: process.env.VERIFYSECRET,
-  resetPasswordSecret: process.env.RESETPASSWORDSECRET,
+  secret: process.env.TOKEN_SECRET,
+  refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
+  verifySecret: process.env.VERIFY_SECRET,
+  resetPasswordSecret: process.env.RESET_PASSWORD_SECRET,
   port: process.env.PORT,
-  tokenLife: process.env.TOKENLIFE,
-  refreshTokenLife: process.env.REFRESHTOKENLIFE,
+  tokenLife: process.env.TOKEN_LIFE,
+  refreshTokenLife: process.env.REFRESH_TOKEN_LIFE,
 };
