@@ -11,7 +11,7 @@ exports.chatHistory = async (req, res) => {
         const user = await User.findById(req.userId)
         let checkid = [];
         let output = [];
-        for (i = 0; i < chat_content.length - 1; i++) {
+        for (i = 0; i < chat_content.length; i++) {
             if (!checkid.includes(chat_content[i].user[0].avatar[0].name))
             {
                 checkid.push(chat_content[i].user[0].avatar[0].name)
