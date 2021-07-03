@@ -1,9 +1,11 @@
 const path = require('path');
 const bcrypt = require("bcryptjs");
 const root = path.dirname(require.main.filename);
-const db = require("../app/models");
+const db = require("../models");
 const fs = require("fs");
+const assert = require('assert')
 const Profile_image = db.profile_image;
+const Province = db.province;
 const Role = db.role;
 const User = db.user;
 const User_detail = db.user_detail
@@ -12,10 +14,17 @@ exports.initial = async () => {
     try { 
         const user_count = await User.countDocuments({})
         const role_count = await Role.countDocuments({})
+        const province_count = await Province.countDocuments({})
         const profile_imange_count = await Profile_image.countDocuments({})
+        if (province_count === 0) {
+            const province_data = JSON.parse(fs.readFileSync(root + '/app/assets/provinces.json', 'utf8'));
+            await Province.insertMany(province_data)
+            console.log("added provinces to Provinces collection")
+
+        }
         if (profile_imange_count === 0) {
-            const data = await fs.readFile(root + '/default_image.txt', 'utf8')
-            await new Profile_image({ name: "default", value: data }).save()
+            const image_data = fs.readFileSync(root + '/app/assets/default_image.txt', 'utf8');
+            await new Profile_image({name: "default", value: image_data}).save()
             console.log("added default profile image to default collection");
         }
         if (role_count === 0) {

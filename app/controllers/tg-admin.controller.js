@@ -62,7 +62,6 @@ exports.getAllJob = (req, res) => {
             {"flightNumber":{ "$regex": req.query.search, "$options": "i" }},
             {"hwbSerialNumber":{ "$regex": req.query.search, "$options": "i" }},
             {"customsEntryNumber":{ "$regex": req.query.search, "$options": "i" }},
-            {"numberOfPieces":{ "$regex": req.query.search, "$options": "i" }},
             {"dockNumber":{ "$regex": req.query.search, "$options": "i" }},
             {"truckNumber":{ "$regex": req.query.search, "$options": "i" }},
             {"customsEntryNumberDate":{ $gt: date_input, $lt: date_input_24hr }},
