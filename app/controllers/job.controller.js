@@ -175,7 +175,7 @@ exports.selectDriver = async (req, res) => {
         await notification.save()
         user_driver.notification += 1;
         await user_driver.save()
-        
+
         const role = await Role.findOne({ name: "tg-admin"})
         const tg_users = await User.find({ role: role._id })
         tg_users.forEach(async (tg_user, index) => {
