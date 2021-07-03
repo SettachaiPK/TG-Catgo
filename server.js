@@ -6,7 +6,7 @@ const fileUpload = require('express-fileupload');
 const cors = require("cors");
 const path = require('path');
 const db = require("./app/models");
-const migrations = require("./migrations/migrations");
+const migrations = require("./app/migrations/migrations");
 const Chat = db.chat;
 const User = db.user;
 const Notification = db.notification;
@@ -22,9 +22,10 @@ require('dotenv').config()
 // give permission for fetch resource
 // https://acoshift.me/2019/0004-web-cors.html
 // https://stackabuse.com/handling-cors-with-node-js/
-
+const CLIENT_URL_REGEX = new RegExp(process.env.CLIENT_URL)
+const DOMAIN_URL_REGEX = new RegExp(process.env.DOMAIN)
 const corsOptions = {
-    origin: /localhost:8080$/, // น้ำตาจะไหล ลืมใส่ regex
+    origin: [CLIENT_URL_REGEX, DOMAIN_URL_REGEX],
     credentials: true,
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
   }
@@ -56,7 +57,7 @@ require("./app/routes/master-module.routes")(app);
 require("./app/routes/chat.routes")(app);
 
 // set port, listen for requests
-const PORT = 8081;
+const PORT = process.env.SERVER_PORT;
 server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`);
 });
@@ -64,7 +65,7 @@ server = app.listen(PORT, () => {
 //socket.io instantiation
 const io = require("socket.io")(server, {
     cors: {
-        origin: /localhost:8080$/,
+        origin: /localhost$/,
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -75,7 +76,7 @@ io.on('connection', (socket) => {
         socket.join(data.user_id);
         User.findById(data.user_id).exec((err,user) => {
             io.in(data.user_id).emit('receive-notify',
-            { 
+            {
                 user_id: data.user_id,
                 notification:  user.notification
             });
@@ -92,10 +93,6 @@ io.on('connection', (socket) => {
                 id: data.id,
             });
         })
-
-        // socket.to(data.user_id).emit('get-count-notify',{
-        //     detail: data.content
-        //   });
     });
     
     socket.on('join', (data) => {

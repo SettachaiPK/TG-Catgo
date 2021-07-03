@@ -71,7 +71,6 @@ exports.overviewAllJob = (req, res) => {
                     {"flightNumber":{ "$regex": req.query.search, "$options": "i" }},
                     {"hwbSerialNumber":{ "$regex": req.query.search, "$options": "i" }},
                     {"customsEntryNumber":{ "$regex": req.query.search, "$options": "i" }},
-                    {"numberOfPieces":{ "$regex": req.query.search, "$options": "i" }},
                     {"dockNumber":{ "$regex": req.query.search, "$options": "i" }},
                     {"truckNumber":{ "$regex": req.query.search, "$options": "i" }},
                     {"customsEntryNumberDate":{ $gt: date_input, $lt: date_input_24hr }},
@@ -105,14 +104,16 @@ exports.overviewAllJob = (req, res) => {
 exports.createJob = async (req, res) => {
     try {
         const job = new Job({
-            status: 0,
+            status: 1,
             awbNumber: req.body.awbNumber,
             hwbSerialNumber: req.body.hwbSerialNumber,
             flightNumber: req.body.flightNumber,
             jobNumber: req.body.jobNumber,
             customsEntryNumber: req.body.customsEntryNumber,
-            customsEntryNumberDate: req.body.customsEntryNumberDate,
+            customsEntryNumberDate: req.body.customsEntryNumberDate
         });
+        job.numberOfPieces = Math.floor(Math.random() * 1000) + 1
+	    job.flightDate = Date.now();
         await job.save()
         const user = await User.findById(req.userId).populate('tax_id')
         job.company = user.tax_id[0];
@@ -125,7 +126,7 @@ exports.createJob = async (req, res) => {
         log.user.push(req.userId);
         log.job.push(job._id);
         await log.save()
-        const qrcode = await QRCode.toDataURL(process.env.CLIENTURL + 'driver/my-job-view/' + job._id)
+        const qrcode = await QRCode.toDataURL(process.env.QRCODE_DOMAIN + 'driver/my-job-view/' + job._id)
         job.qrCode = qrcode
         await job.save()
         res.status(200).send({message: "Job was created successfully!"});

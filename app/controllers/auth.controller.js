@@ -28,12 +28,12 @@ let readHTMLFile = function(path, callback) {
 };
 
 const smtp = {
-    host: process.env.EMAILHOST, //set to your host name or ip
-    port: process.env.EMAILPORT, //25, 465, 587 depend on your 
+    host: process.env.EMAIL_HOST, //set to your host name or ip
+    port: process.env.EMAIL_PORT, //25, 465, 587 depend on your
     secure: false, // use TLS
     auth: {
-      user: process.env.EMAILUSER, //user account
-      pass: process.env.EMAILPASS //user password
+      user: process.env.EMAIL_USER, //user account
+      pass: process.env.EMAIL_PASS //user password
     }
   };
 const smtpTransport = mailer.createTransport(smtp);
@@ -187,20 +187,20 @@ exports.signup = (req, res) => {
                             if (err) {
                                 return res.status(500).send({message: err});
                             }
-                            console.log(process.env.VERIFYEMAILTOKENLIFE)
+                            console.log(process.env.VERIFY_EMAIL_TOKEN_LIFE)
                             let token = jwt.sign({id: user.id}, config.verifySecret, {
-                                expiresIn: process.env.VERIFYEMAILTOKENLIFE
+                                expiresIn: process.env.VERIFY_EMAIL_TOKEN_LIFE
                             });
 
                             readHTMLFile( path.join(__dirname, '../assets/fromEmail/register/index.html'), function(err, html) {
                                 let template = handlebars.compile(html)
                                 let replacements = {
-                                    verifyLink: process.env.CLIENTURL + 'auth/verifyRegister/' + token
+                                    verifyLink: process.env.EMAIL_DOMAIN + 'auth/verifyRegister/' + token
                                 };
                                 let htmlToSend = template(replacements);
 
                                 let mail = {
-                                    from: process.env.EMAILFROM,
+                                    from: process.env.EMAIL_FROM,
                                     to: user.email,
                                     subject: "Email verification for "+ user.username + " at TG Smart Backhaul", 
                                     html: htmlToSend
@@ -261,10 +261,10 @@ exports.signIn = async (req, res) => {
             });
         }
         const token = jwt.sign({id: user.id}, config.secret, {
-            expiresIn: 86400 //process.env.TOKENLIFE
+            expiresIn: process.env.TOKEN_LIFE
         });
         const refreshToken = jwt.sign({id: user.id}, config.refreshTokenSecret, {
-            expiresIn: 86400 //process.env.REFRESHTOKENLIFE
+            expiresIn: process.env.REFRESH_TOKEN_LIFE
         });
         const user_callback = await User.findById(sanitize(user._id)).populate("role").populate("avatar")
         if (user_callback.status === false) {
@@ -284,6 +284,7 @@ exports.signIn = async (req, res) => {
         });
     }
     catch (err) {
+	console.log(err);
         return res.status(500).send({message: err});
     }
 }
@@ -295,16 +296,16 @@ exports.generateForgotPwdLink = async (req, res) => {
             return res.status(404).send({message: "User Not found."});
         }
         let token = jwt.sign({id: user.id}, config.resetPasswordSecret, {
-            expiresIn: process.env.RESETPASSWORDTOKENLIFE
+            expiresIn: process.env.RESET_PASSWORD_TOKEN_LIFE
         });
         readHTMLFile( path.join(__dirname, '../assets/fromEmail/forgetPWD/index.html'), function(err, html) {
             let template = handlebars.compile(html)
             let replacements = {
-                verifyLink: process.env.CLIENTURL + 'auth/forget-password/' + token
+                verifyLink: process.env.EMAIL_DOMAIN + 'auth/forget-password/' + token
             };
             let htmlToSend = template(replacements);
             let mail = {
-                from: process.env.EMAILFROM,
+                from: process.env.EMAIL_FROM,
                 to: user.email,
                 subject: "Reset password link for "+ user.username + " at TG Smart Backhaul",
                 html: htmlToSend
